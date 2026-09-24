@@ -1,0 +1,6 @@
+{
+  "name": "আরতবই",
+  "description": "বাংলাদেশের চালের আরতের জন্য অফলাইন-ফার্স্ট স্টক, দেনা-পাওনা লেজার ও ৪-ইন-১ হিসাব খাতা অ্যাপ",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
