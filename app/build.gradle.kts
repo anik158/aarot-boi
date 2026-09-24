@@ -62,6 +62,10 @@ android {
   }
 }
 
+// Name the build outputs after the app rather than the Gradle module, so CI publishes
+// aarot-boi-debug.apk instead of app-debug.apk.
+base { archivesName = "aarot-boi" }
+
 // Configure the Secrets Gradle Plugin to use .env and .env.example files
 // to match the convention used in Web projects.
 secrets {
