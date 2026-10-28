@@ -17,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -39,6 +40,9 @@ fun KhataScreen(
 ) {
     val colors = LocalNanoColors.current
     var selectedTab by rememberSaveable { mutableStateOf(initialTab) } // 0 = মাল খাতা (স্টক), 1 = ক্যাশ খাতা (রোকার)
+    LaunchedEffect(initialTab) {
+        selectedTab = initialTab
+    }
 
     Column(
         modifier = Modifier

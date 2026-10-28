@@ -308,7 +308,7 @@ fun PartiesScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        listOf("CASH" to "নগদ", "BKASH" to "বিকাশ", "NAGAD" to "নগদ", "BANK" to "ব্যাংক").forEach { (method, label) ->
+                        listOf("CASH" to "নগদ", "BKASH" to "বিকাশ", "NAGAD" to "নগদ পে", "BANK" to "ব্যাংক").forEach { (method, label) ->
                             FilterChip(
                                 selected = payMethod == method,
                                 onClick = { payMethod = method },

@@ -53,6 +53,20 @@ class DeviceBindingManager(context: Context) {
         )
     }
 
+    fun loadCashCounts(): IntArray {
+        val notes = intArrayOf(1000, 500, 200, 100, 50, 20, 10)
+        return IntArray(notes.size) { index -> prefs.getInt("cash_note_${notes[index]}", 0) }
+    }
+
+    fun saveCashCounts(counts: IntArray) {
+        val notes = intArrayOf(1000, 500, 200, 100, 50, 20, 10)
+        val editor = prefs.edit()
+        notes.forEachIndexed { index, note ->
+            editor.putInt("cash_note_$note", counts.getOrElse(index) { 0 })
+        }
+        editor.apply()
+    }
+
     fun updateRegistration(shopName: String, proprietorName: String, phone: String, googleAccount: String) {
         prefs.edit()
             .putBoolean("is_activated", true)

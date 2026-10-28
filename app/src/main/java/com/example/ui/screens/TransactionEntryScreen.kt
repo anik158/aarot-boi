@@ -71,6 +71,7 @@ import com.example.data.local.entity.TransactionEntity
 import com.example.ui.components.ChalanMemoDialog
 import com.example.ui.theme.LocalNanoColors
 import com.example.util.BanglaNumberUtils
+import com.example.util.LedgerMath
 import com.example.viewmodel.AratdarViewModel
 import kotlinx.coroutines.launch
 
@@ -124,7 +125,7 @@ fun TransactionEntryScreen(
 
     val bagCount = BanglaNumberUtils.toEnglishDigits(bagCountStr).toIntOrNull() ?: 0
     val ratePerBag = BanglaNumberUtils.toEnglishDigits(ratePerBagStr).toDoubleOrNull() ?: 0.0
-    val totalAmount = bagCount * ratePerBag
+    val totalAmount = LedgerMath.saleTotal(bagCount, ratePerBag)
 
     // Mon conversion: 40 kg = 1 Mon
     val bagSizeKg = selectedProduct?.bagSizeKg ?: 50
@@ -133,15 +134,15 @@ fun TransactionEntryScreen(
     val ratePerMon = if (bagSizeKg > 0) (ratePerBag / bagSizeKg) * 40.0 else 0.0
 
     val commissionPerBag = BanglaNumberUtils.toEnglishDigits(commissionPerBagStr).toDoubleOrNull() ?: 0.0
-    val totalCommission = if (isConsignment) bagCount * commissionPerBag else 0.0
+    val totalCommission = if (isConsignment) LedgerMath.commissionTotal(bagCount, commissionPerBag) else 0.0
     val laborCost = if (isConsignment) (BanglaNumberUtils.toEnglishDigits(laborCostStr).toDoubleOrNull() ?: 0.0) else 0.0
     val netPayableToMiller = if (isConsignment) {
-        val net = totalAmount - totalCommission - laborCost
-        if (net > 0) net else 0.0
+        LedgerMath.netPayableToMiller(totalAmount, totalCommission, laborCost)
     } else 0.0
 
     val paidAmount = BanglaNumberUtils.toEnglishDigits(paidAmountStr).toDoubleOrNull() ?: 0.0
-    val dueAmount = if (totalAmount > paidAmount) totalAmount - paidAmount else 0.0
+    val balanceDelta = LedgerMath.partyBalanceDelta(totalAmount, paidAmount)
+    val dueAmount = if (balanceDelta > 0) balanceDelta else 0.0
     val emptyBagsGiven = BanglaNumberUtils.toEnglishDigits(emptyBagsGivenStr).toIntOrNull() ?: 0
 
     // Credit limit check
@@ -906,6 +907,10 @@ fun TransactionEntryScreen(
                         scope.launch { snackbarHostState.showSnackbar("বস্তা এবং দর সঠিকভাবে দিন") }
                         return@Button
                     }
+                    if (isSaleMode && bagCount > selectedProduct!!.currentBags) {
+                        scope.launch { snackbarHostState.showSnackbar("গোডাউনে পর্যাপ্ত বস্তা নেই") }
+                        return@Button
+                    }
                     if (isSaleMode && selectedCustomer == null) {
                         scope.launch { snackbarHostState.showSnackbar("অনুগ্রহ করে ক্রেতা নির্বাচন করুন") }
                         return@Button
@@ -933,7 +938,7 @@ fun TransactionEntryScreen(
                         laborCost = laborCost,
                         netPayableToMiller = netPayableToMiller,
                         paidAmount = paidAmount,
-                        dueAmount = dueAmount,
+                        dueAmount = balanceDelta,
                         paymentMethod = paymentMethod,
                         trxId = trxIdStr,
                         truckNo = truckNoStr,

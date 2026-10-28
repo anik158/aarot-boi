@@ -73,6 +73,7 @@ fun DashboardScreen(
     viewModel: AratdarViewModel,
     onNavigateToChalan: () -> Unit,
     onNavigateToStock: () -> Unit,
+    onNavigateToCash: () -> Unit,
     onNavigateToParties: () -> Unit
 ) {
     val colors = LocalNanoColors.current
@@ -279,7 +280,9 @@ fun DashboardScreen(
                                 accentColor = colors.badgeAmberText,
                                 titleSize = metricTitleSize,
                                 valueSize = metricValueSize,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { onNavigateToCash() }
                             )
                         }
                     }

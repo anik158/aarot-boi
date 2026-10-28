@@ -12,6 +12,7 @@ import com.example.data.local.entity.TransactionEntity
 import com.example.data.repository.AratdarRepository
 import com.example.util.DeviceBindingManager
 import com.example.util.DeviceBindingState
+import com.example.util.LedgerMath
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -59,6 +60,16 @@ class AratdarViewModel(application: Application) : AndroidViewModel(application)
     init {
         val db = AratdarDatabase.getInstance(application)
         repository = AratdarRepository(db)
+        val savedCount = deviceBindingManager.loadCashCounts()
+        _denomination.value = CashDenomination(
+            count1000 = savedCount[0],
+            count500 = savedCount[1],
+            count200 = savedCount[2],
+            count100 = savedCount[3],
+            count50 = savedCount[4],
+            count20 = savedCount[5],
+            count10 = savedCount[6]
+        )
         viewModelScope.launch {
             repository.checkAndSeedSampleData()
         }
@@ -104,10 +115,8 @@ class AratdarViewModel(application: Application) : AndroidViewModel(application)
         val customerDue = partyList.filter { it.balance > 0 }.sumOf { it.balance }
         val millerPayable = partyList.filter { it.balance < 0 }.sumOf { kotlin.math.abs(it.balance) }
 
-        val cashSales = txList.filter { it.type == "SALE" && it.paymentMethod == "CASH" }.sumOf { it.paidAmount }
-        val cashPaymentsIn = payList.filter { it.type == "RECEIVED" && it.paymentMethod == "CASH" }.sumOf { it.amount }
-        val cashPaymentsOut = payList.filter { it.type == "PAID" && it.paymentMethod == "CASH" }.sumOf { it.amount }
-        val cashTotal = (cashSales + cashPaymentsIn) - cashPaymentsOut
+        val cashReceived = payList.filter { it.type == "RECEIVED" && it.paymentMethod == "CASH" }.sumOf { it.amount }
+        val cashPaid = payList.filter { it.type == "PAID" && it.paymentMethod == "CASH" }.sumOf { it.amount }
 
         DashboardMetrics(
             totalStockBags = totalBags,
@@ -117,7 +126,7 @@ class AratdarViewModel(application: Application) : AndroidViewModel(application)
             todaySalesBags = todaySalesB,
             totalCustomerDue = customerDue,
             totalMillerPayable = millerPayable,
-            cashInHand = if (cashTotal < 0) 0.0 else cashTotal
+            cashInHand = LedgerMath.cashInHand(cashReceived, cashPaid)
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardMetrics())
 
@@ -125,7 +134,7 @@ class AratdarViewModel(application: Application) : AndroidViewModel(application)
 
     fun executeTransaction(tx: TransactionEntity, emptyBagsGiven: Int = 0, onSuccess: (TransactionEntity) -> Unit) {
         viewModelScope.launch {
-            val id = repository.executeTransaction(tx, emptyBagsGiven)
+            val id = repository.executeTransaction(tx, emptyBagsGiven) ?: return@launch
             val saved = tx.copy(id = id)
             lastSavedTransaction.value = saved
             onSuccess(saved)
@@ -202,5 +211,6 @@ class AratdarViewModel(application: Application) : AndroidViewModel(application)
         c1000: Int, c500: Int, c200: Int, c100: Int, c50: Int, c20: Int, c10: Int
     ) {
         _denomination.value = CashDenomination(c1000, c500, c200, c100, c50, c20, c10)
+        deviceBindingManager.saveCashCounts(intArrayOf(c1000, c500, c200, c100, c50, c20, c10))
     }
 }

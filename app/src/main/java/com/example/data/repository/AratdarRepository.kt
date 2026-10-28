@@ -1,11 +1,13 @@
 package com.example.data.repository
 
+import androidx.room.withTransaction
 import com.example.data.local.AratdarDatabase
 import com.example.data.local.entity.PartyEntity
 import com.example.data.local.entity.PaymentEntity
 import com.example.data.local.entity.ProductEntity
 import com.example.data.local.entity.StockLogEntity
 import com.example.data.local.entity.TransactionEntity
+import com.example.util.LedgerMath
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -57,113 +59,131 @@ class AratdarRepository(private val database: AratdarDatabase) {
     }
 
     /**
-     * Executes a true 4-in-1 Transaction in a single flow:
-     * 1. Inserts transaction record into transactions table
-     * 2. Updates product stock (decrements for SALE, increments for PURCHASE) & logs stock movement
-     * 3. Updates Customer Due (দেনাদার খাতা) or Miller Payable (পাওনাদার খাতা)
-     * 4. Updates Cash Book (ক্যাশ খাতা) by inserting payment record if paidAmount > 0
+     * Writes one invoice and the four books in a single database transaction.
+     * Returns null when a sale asks for more sacks than the warehouse has.
+     * Party balance uses sale total minus amount paid, so an overpayment is a credit.
+     * Home cash is derived only from payment rows, never from the invoice paid amount as well.
      */
-    suspend fun executeTransaction(tx: TransactionEntity, emptyBagsGiven: Int = 0): Long = withContext(Dispatchers.IO) {
-        val txId = transactionDao.insertTransaction(tx)
-
-        if (tx.type == "SALE") {
-            // 1. Deduct stock from গোডাউন
-            productDao.adjustStock(tx.productId, -tx.bagCount)
-            val product = productDao.getProductById(tx.productId)
-            stockLogDao.insertLog(
-                StockLogEntity(
-                    productId = tx.productId,
-                    productName = tx.productName,
-                    type = "OUT",
-                    changeBags = -tx.bagCount,
-                    resultingBags = product?.currentBags ?: 0,
-                    reason = if (tx.tradeType == "CONSIGNMENT") "কমিশন চালান বিক্রয় (চালান #${txId})" else "চালান বিক্রয় (চালান #${txId})"
-                )
-            )
-
-            // 2. দেনাদার খাতা: Customer owes remaining due
-            if (tx.customerId != null && tx.dueAmount > 0) {
-                partyDao.updateBalance(tx.customerId, tx.dueAmount)
+    suspend fun executeTransaction(tx: TransactionEntity, emptyBagsGiven: Int = 0): Long? = withContext(Dispatchers.IO) {
+        database.withTransaction {
+            if (tx.type == "SALE") {
+                val onHand = productDao.getProductById(tx.productId)?.currentBags ?: 0
+                if (tx.bagCount > onHand) {
+                    return@withTransaction null
+                }
             }
 
-            // 3. খালি বস্তা খাতা: If empty bags given, track empty bags due
-            if (tx.customerId != null && emptyBagsGiven > 0) {
-                partyDao.updateEmptyBags(tx.customerId, emptyBagsGiven)
-            }
+            val txId = transactionDao.insertTransaction(tx)
+            val balanceDelta = LedgerMath.partyBalanceDelta(tx.totalAmount, tx.paidAmount)
 
-            // 4. পাওনাদার খাতা (For Consignment): We owe the miller netPayableToMiller
-            if (tx.tradeType == "CONSIGNMENT" && tx.supplierId != null && tx.netPayableToMiller > 0) {
-                partyDao.updateBalance(tx.supplierId, -tx.netPayableToMiller)
-            }
-
-            // 5. ক্যাশ খাতা: Record immediate cash/bank/bkash payment received
-            if (tx.paidAmount > 0) {
-                paymentDao.insertPayment(
-                    PaymentEntity(
-                        date = tx.date,
-                        partyId = tx.customerId ?: 0L,
-                        partyName = tx.customerName.ifEmpty { "নগদ খরিদ্দার" },
-                        type = "RECEIVED",
-                        amount = tx.paidAmount,
-                        paymentMethod = tx.paymentMethod,
-                        trxId = tx.trxId,
-                        note = "চালান #${txId} এ নগদ/অনলাইন জমা (${tx.productName} ${tx.bagCount} বস্তা)"
+            if (tx.type == "SALE") {
+                productDao.adjustStock(tx.productId, -tx.bagCount)
+                val product = productDao.getProductById(tx.productId)
+                stockLogDao.insertLog(
+                    StockLogEntity(
+                        productId = tx.productId,
+                        productName = tx.productName,
+                        type = "OUT",
+                        changeBags = -tx.bagCount,
+                        resultingBags = product?.currentBags ?: 0,
+                        reason = if (tx.tradeType == "CONSIGNMENT") "কমিশন চালান বিক্রয় (চালান #${txId})" else "চালান বিক্রয় (চালান #${txId})"
                     )
                 )
-            }
-        } else if (tx.type == "PURCHASE") {
-            // 1. Add stock to গোডাউন
-            productDao.adjustStock(tx.productId, tx.bagCount)
-            val product = productDao.getProductById(tx.productId)
-            stockLogDao.insertLog(
-                StockLogEntity(
-                    productId = tx.productId,
-                    productName = tx.productName,
-                    type = "IN",
-                    changeBags = tx.bagCount,
-                    resultingBags = product?.currentBags ?: 0,
-                    reason = "ক্রয় চালান (চালান #${txId})"
-                )
-            )
 
-            // 2. পাওনাদার খাতা: Miller payable
-            if (tx.supplierId != null && tx.dueAmount > 0) {
-                partyDao.updateBalance(tx.supplierId, -tx.dueAmount)
-            }
+                if (tx.customerId != null && balanceDelta != 0.0) {
+                    partyDao.updateBalance(tx.customerId, balanceDelta)
+                }
 
-            // 3. ক্যাশ খাতা: Immediate cash paid to supplier
-            if (tx.paidAmount > 0) {
-                paymentDao.insertPayment(
-                    PaymentEntity(
-                        date = tx.date,
-                        partyId = tx.supplierId ?: 0L,
-                        partyName = tx.supplierName,
-                        type = "PAID",
-                        amount = tx.paidAmount,
-                        paymentMethod = tx.paymentMethod,
-                        trxId = tx.trxId,
-                        note = "ক্রয় চালান #${txId} এ নগদ প্রদান (${tx.productName} ${tx.bagCount} বস্তা)"
+                if (tx.customerId != null && emptyBagsGiven > 0) {
+                    partyDao.updateEmptyBags(tx.customerId, emptyBagsGiven)
+                }
+
+                if (tx.tradeType == "CONSIGNMENT" && tx.supplierId != null && tx.netPayableToMiller > 0) {
+                    partyDao.updateBalance(tx.supplierId, -tx.netPayableToMiller)
+                }
+
+                if (tx.paidAmount > 0) {
+                    paymentDao.insertPayment(
+                        PaymentEntity(
+                            date = tx.date,
+                            partyId = tx.customerId ?: 0L,
+                            partyName = tx.customerName.ifEmpty { "নগদ খরিদ্দার" },
+                            type = "RECEIVED",
+                            amount = tx.paidAmount,
+                            paymentMethod = tx.paymentMethod,
+                            trxId = tx.trxId,
+                            note = "চালান #${txId} এ নগদ/অনলাইন জমা (${tx.productName} ${tx.bagCount} বস্তা)"
+                        )
+                    )
+                }
+
+                // Labor is already removed from the mill's net. This row only takes notes out of the drawer.
+                if (tx.tradeType == "CONSIGNMENT" && tx.laborCost > 0) {
+                    paymentDao.insertPayment(
+                        PaymentEntity(
+                            date = tx.date,
+                            partyId = 0L,
+                            partyName = "খালাসি",
+                            type = "PAID",
+                            amount = tx.laborCost,
+                            paymentMethod = "CASH",
+                            note = "কমিশন চালান #${txId} খালাসি খরচ"
+                        )
+                    )
+                }
+            } else if (tx.type == "PURCHASE") {
+                productDao.adjustStock(tx.productId, tx.bagCount)
+                val product = productDao.getProductById(tx.productId)
+                stockLogDao.insertLog(
+                    StockLogEntity(
+                        productId = tx.productId,
+                        productName = tx.productName,
+                        type = "IN",
+                        changeBags = tx.bagCount,
+                        resultingBags = product?.currentBags ?: 0,
+                        reason = "ক্রয় চালান (চালান #${txId})"
                     )
                 )
+
+                if (tx.supplierId != null && balanceDelta != 0.0) {
+                    partyDao.updateBalance(tx.supplierId, -balanceDelta)
+                }
+
+                if (tx.paidAmount > 0) {
+                    paymentDao.insertPayment(
+                        PaymentEntity(
+                            date = tx.date,
+                            partyId = tx.supplierId ?: 0L,
+                            partyName = tx.supplierName,
+                            type = "PAID",
+                            amount = tx.paidAmount,
+                            paymentMethod = tx.paymentMethod,
+                            trxId = tx.trxId,
+                            note = "ক্রয় চালান #${txId} এ নগদ প্রদান (${tx.productName} ${tx.bagCount} বস্তা)"
+                        )
+                    )
+                }
             }
+
+            txId
         }
-
-        txId
     }
 
     /**
-     * Records a payment and adjusts party running balance
+     * Records a payment and adjusts the party balance in one database transaction.
      */
     suspend fun recordPayment(payment: PaymentEntity): Long = withContext(Dispatchers.IO) {
-        val payId = paymentDao.insertPayment(payment)
-        if (payment.type == "RECEIVED") {
-            // Customer paid us -> decreases customer due (subtract amount)
-            partyDao.updateBalance(payment.partyId, -payment.amount)
-        } else if (payment.type == "PAID") {
-            // We paid Miller -> decreases our payable to miller (add amount towards 0)
-            partyDao.updateBalance(payment.partyId, payment.amount)
+        database.withTransaction {
+            val payId = paymentDao.insertPayment(payment)
+            if (payment.partyId != 0L) {
+                if (payment.type == "RECEIVED") {
+                    partyDao.updateBalance(payment.partyId, -payment.amount)
+                } else if (payment.type == "PAID") {
+                    partyDao.updateBalance(payment.partyId, payment.amount)
+                }
+            }
+            payId
         }
-        payId
     }
 
     /**
@@ -236,7 +256,7 @@ class AratdarRepository(private val database: AratdarDatabase) {
                     phone = "01712345678",
                     address = "বাবুবাজার চালের আড়ত, ঢাকা",
                     type = "CUSTOMER",
-                    balance = 78500.0, // Customer owes us 78,500 TK
+                    balance = 0.0,
                     creditLimit = 150000.0,
                     emptyBagsDue = 45,
                     note = "নিয়মিত পাইকারি ক্রেতা"
@@ -246,7 +266,7 @@ class AratdarRepository(private val database: AratdarDatabase) {
                     phone = "01819876543",
                     address = "চকবাজার, ঢাকা",
                     type = "CUSTOMER",
-                    balance = 45000.0,
+                    balance = 0.0,
                     creditLimit = 100000.0,
                     emptyBagsDue = 20,
                     note = "সাপ্তাহিক বাকি শোধ করে"
@@ -256,7 +276,7 @@ class AratdarRepository(private val database: AratdarDatabase) {
                     phone = "01733445566",
                     address = "নওগাঁ সদর",
                     type = "SUPPLIER",
-                    balance = -185000.0, // We owe miller 1,85,000 TK
+                    balance = 0.0,
                     creditLimit = 500000.0,
                     emptyBagsDue = 0,
                     note = "মিলার (কমিশন চালান পাঠান)"
@@ -266,7 +286,7 @@ class AratdarRepository(private val database: AratdarDatabase) {
                     phone = "01911223344",
                     address = "কুষ্টিয়া বাইপাস",
                     type = "SUPPLIER",
-                    balance = -120000.0,
+                    balance = 0.0,
                     creditLimit = 300000.0,
                     emptyBagsDue = 0,
                     note = "মিনিকেটের নিয়মিত মিলার"
@@ -276,7 +296,7 @@ class AratdarRepository(private val database: AratdarDatabase) {
                     phone = "01622334455",
                     address = "মিরপুর-১ বাজার, ঢাকা",
                     type = "CUSTOMER",
-                    balance = 25000.0,
+                    balance = 0.0,
                     creditLimit = 50000.0,
                     emptyBagsDue = 15,
                     note = "খুচরা ক্রেতা"
@@ -284,66 +304,84 @@ class AratdarRepository(private val database: AratdarDatabase) {
             )
             partyDao.insertParties(sampleParties)
 
-            // Insert initial sample transactions
-            val initialTx1 = TransactionEntity(
-                date = System.currentTimeMillis() - 86400000L * 2,
-                type = "SALE",
-                tradeType = "OWN_STOCK",
-                customerId = 1L,
-                customerName = "মেসার্স ভাই ভাই স্টোর",
-                productId = 1L,
-                productName = "মিনিকেট (কুষ্টিয়া স্পেশাল)",
-                bagCount = 30,
-                bagSizeKg = 50,
-                ratePerBag = 3450.0,
-                totalAmount = 103500.0,
-                paidAmount = 25000.0,
-                dueAmount = 78500.0,
-                paymentMethod = "CASH",
-                chalanNo = "CH-1001",
-                notes = "৩০ বস্তা নিজস্ব মিনিকেট ডেলিভারি"
-            )
-            transactionDao.insertTransaction(initialTx1)
+            val parties = partyDao.getAllPartiesOnce()
+            val products = productDao.getAllProductsOnce()
+            val bhaiBhai = parties.first { it.name == "মেসার্স ভাই ভাই স্টোর" }
+            val janata = parties.first { it.name == "জনতা ট্রেডার্স" }
+            val sotota = parties.first { it.name == "সততা রাইস মিল (নওগাঁ)" }
+            val miniket = products.first { it.name.startsWith("মিনিকেট") }
+            val br28 = products.first { it.name.startsWith("বিআর-২৮") }
 
-            val initialTx2 = TransactionEntity(
-                date = System.currentTimeMillis() - 86400000L,
-                type = "SALE",
-                tradeType = "CONSIGNMENT",
-                customerId = 2L,
-                customerName = "জনতা ট্রেডার্স",
-                supplierId = 3L,
-                supplierName = "সততা রাইস মিল (নওগাঁ)",
-                productId = 3L,
-                productName = "বিআর-২৮ (নওগাঁ)",
-                bagCount = 50,
-                bagSizeKg = 50,
-                ratePerBag = 2850.0,
-                totalAmount = 142500.0,
-                commissionPerBag = 20.0,
-                totalCommission = 1000.0,
-                laborCost = 500.0,
-                netPayableToMiller = 141000.0,
-                paidAmount = 97500.0,
-                dueAmount = 45000.0,
-                paymentMethod = "BKASH",
-                trxId = "BK79812A",
-                chalanNo = "CH-1002",
-                truckNo = "ঢাকা মেট্রো-ট ১১-৪৫৬৭",
-                notes = "নওগাঁর চালান থেকে সরাসরি ডেলিভারি"
+            val ownTotal = LedgerMath.saleTotal(30, 3450.0)
+            executeTransaction(
+                TransactionEntity(
+                    date = System.currentTimeMillis() - 86400000L * 2,
+                    type = "SALE",
+                    tradeType = "OWN_STOCK",
+                    customerId = bhaiBhai.id,
+                    customerName = bhaiBhai.name,
+                    productId = miniket.id,
+                    productName = miniket.name,
+                    bagCount = 30,
+                    bagSizeKg = miniket.bagSizeKg,
+                    ratePerBag = 3450.0,
+                    totalAmount = ownTotal,
+                    paidAmount = 25000.0,
+                    dueAmount = LedgerMath.partyBalanceDelta(ownTotal, 25000.0),
+                    paymentMethod = "CASH",
+                    chalanNo = "CH-1001",
+                    notes = "৩০ বস্তা নিজস্ব মিনিকেট ডেলিভারি"
+                )
             )
-            transactionDao.insertTransaction(initialTx2)
 
-            val initialPayment = PaymentEntity(
-                date = System.currentTimeMillis() - 43200000L,
-                partyId = 1L,
-                partyName = "মেসার্স ভাই ভাই স্টোর",
-                type = "RECEIVED",
-                amount = 20000.0,
-                paymentMethod = "CASH",
-                trxId = "",
-                note = "বকেয়া টাকা জমা ক্যাশে"
+            recordPayment(
+                PaymentEntity(
+                    date = System.currentTimeMillis() - 43200000L,
+                    partyId = bhaiBhai.id,
+                    partyName = bhaiBhai.name,
+                    type = "RECEIVED",
+                    amount = 20000.0,
+                    paymentMethod = "CASH",
+                    trxId = "",
+                    note = "বকেয়া টাকা জমা ক্যাশে"
+                )
             )
-            paymentDao.insertPayment(initialPayment)
+
+            val consignmentTotal = LedgerMath.saleTotal(50, 2850.0)
+            val consignmentFee = LedgerMath.commissionTotal(50, 20.0)
+            val consignmentLabor = 500.0
+            executeTransaction(
+                TransactionEntity(
+                    date = System.currentTimeMillis() - 86400000L,
+                    type = "SALE",
+                    tradeType = "CONSIGNMENT",
+                    customerId = janata.id,
+                    customerName = janata.name,
+                    supplierId = sotota.id,
+                    supplierName = sotota.name,
+                    productId = br28.id,
+                    productName = br28.name,
+                    bagCount = 50,
+                    bagSizeKg = br28.bagSizeKg,
+                    ratePerBag = 2850.0,
+                    totalAmount = consignmentTotal,
+                    commissionPerBag = 20.0,
+                    totalCommission = consignmentFee,
+                    laborCost = consignmentLabor,
+                    netPayableToMiller = LedgerMath.netPayableToMiller(
+                        consignmentTotal,
+                        consignmentFee,
+                        consignmentLabor
+                    ),
+                    paidAmount = 97500.0,
+                    dueAmount = LedgerMath.partyBalanceDelta(consignmentTotal, 97500.0),
+                    paymentMethod = "BKASH",
+                    trxId = "BK79812A",
+                    chalanNo = "CH-1002",
+                    truckNo = "ঢাকা মেট্রো-ট ১১-৪৫৬৭",
+                    notes = "নওগাঁর চালান থেকে সরাসরি ডেলিভারি"
+                )
+            )
         }
     }
 }

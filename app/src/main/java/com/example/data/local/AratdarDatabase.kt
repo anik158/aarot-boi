@@ -23,7 +23,7 @@ import com.example.data.local.entity.TransactionEntity
         PaymentEntity::class,
         StockLogEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AratdarDatabase : RoomDatabase() {

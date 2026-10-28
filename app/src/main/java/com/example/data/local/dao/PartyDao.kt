@@ -16,6 +16,9 @@ interface PartyDao {
     @Query("SELECT * FROM parties WHERE type = :type OR type = 'BOTH' ORDER BY name ASC")
     fun getPartiesByType(type: String): Flow<List<PartyEntity>>
 
+    @Query("SELECT * FROM parties")
+    suspend fun getAllPartiesOnce(): List<PartyEntity>
+
     @Query("SELECT * FROM parties WHERE id = :id LIMIT 1")
     suspend fun getPartyById(id: Long): PartyEntity?
 

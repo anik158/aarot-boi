@@ -179,6 +179,10 @@ fun MainAppContainer(viewModel: AratdarViewModel) {
                             khataSubTab = 0
                             currentRoute = Screen.Khata.route
                         },
+                        onNavigateToCash = {
+                            khataSubTab = 1
+                            currentRoute = Screen.Khata.route
+                        },
                         onNavigateToParties = { currentRoute = Screen.Parties.route }
                     )
                     Screen.Khata.route -> KhataScreen(
