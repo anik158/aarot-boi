@@ -1,13 +1,10 @@
-name: Build Release APK
+name: Build Debug APK
 
 on:
   push:
     branches:
       - build-apk-release
   workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   build:
@@ -92,19 +89,6 @@ jobs:
       - name: Upload APK to Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: release-apk
+          name: debug-apk
           path: app/build/outputs/apk/debug/aarot-boi-debug.apk
-          retention-days: 30
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ github.run_number }}
-          name: Release APK Build ${{ github.run_number }}
-          body: |
-            Automated release build for Aarot Boi
-
-            Download the APK from the assets below.
-          draft: false
-          prerelease: false
-          files: app/build/outputs/apk/debug/aarot-boi-debug.apk
+          retention-days: 7
