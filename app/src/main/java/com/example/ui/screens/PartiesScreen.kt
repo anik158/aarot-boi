@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -425,27 +426,27 @@ fun PartiesScreen(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        FilterChip(
+                        PartyTypeChoiceCard(
+                            title = "খরিদ্দার",
+                            subtitle = "যার কাছে বাকি পাব",
                             selected = newPartyType == "CUSTOMER",
+                            selectedBg = colors.badgeSuccessBg,
+                            selectedBorder = colors.badgeSuccessText,
+                            selectedText = colors.badgeSuccessText,
                             onClick = { newPartyType = "CUSTOMER" },
-                            label = { Text("খরিদ্দার / দেনাদার", fontSize = 11.sp) },
-                            modifier = Modifier.weight(1f),
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = colors.primaryContainer,
-                                selectedLabelColor = colors.primary
-                            )
+                            modifier = Modifier.weight(1f)
                         )
-                        FilterChip(
+                        PartyTypeChoiceCard(
+                            title = "মিলার",
+                            subtitle = "যাকে টাকা দিতে হবে",
                             selected = newPartyType == "SUPPLIER",
+                            selectedBg = colors.badgeBlueBg,
+                            selectedBorder = colors.badgeBlueText,
+                            selectedText = colors.badgeBlueText,
                             onClick = { newPartyType = "SUPPLIER" },
-                            label = { Text("মিলার / পাওনাদার", fontSize = 11.sp) },
-                            modifier = Modifier.weight(1f),
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = colors.primaryContainer,
-                                selectedLabelColor = colors.primary
-                            )
+                            modifier = Modifier.weight(1f)
                         )
                     }
 
@@ -502,16 +503,13 @@ fun PartiesScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
+                    if (newPartyType == "CUSTOMER") {
                         OutlinedTextField(
                             value = newPartyCreditLimit,
                             onValueChange = { newPartyCreditLimit = it },
-                            label = { Text("ক্রেডিট লিমিট (৳)", color = colors.textMuted) },
+                            label = { Text("সর্বোচ্চ বাকি (০ = সীমা নেই)", color = colors.textMuted) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedTextColor = colors.textPrimary,
@@ -520,13 +518,19 @@ fun PartiesScreen(
                                 unfocusedBorderColor = colors.border
                             )
                         )
+                        Text(
+                            text = "এত টাকার বেশি বাকি হলে সতর্কবার্তা দেখাবে।",
+                            fontSize = 11.sp,
+                            color = colors.textMuted,
+                            modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
+                        )
 
                         OutlinedTextField(
                             value = newPartyEmptyBags,
                             onValueChange = { newPartyEmptyBags = it },
-                            label = { Text("খালি বস্তা পাওনা", color = colors.textMuted) },
+                            label = { Text("খালি বস্তা পাওনা (যদি থাকে)", color = colors.textMuted) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedTextColor = colors.textPrimary,
@@ -534,6 +538,12 @@ fun PartiesScreen(
                                 focusedBorderColor = colors.primary,
                                 unfocusedBorderColor = colors.border
                             )
+                        )
+                        Text(
+                            text = "ক্রেতাকে খালি চটের বস্তা দিলে এখানে লিখুন।",
+                            fontSize = 11.sp,
+                            color = colors.textMuted,
+                            modifier = Modifier.padding(top = 4.dp)
                         )
                     }
 
@@ -553,8 +563,8 @@ fun PartiesScreen(
                                     address = newPartyAddress,
                                     type = newPartyType,
                                     openingBalance = balanceAdjusted,
-                                    creditLimit = limit,
-                                    emptyBagsDue = bags,
+                                    creditLimit = if (newPartyType == "CUSTOMER") limit else 0.0,
+                                    emptyBagsDue = if (newPartyType == "CUSTOMER") bags else 0,
                                     onSuccess = { showAddPartyDialog = false }
                                 )
                             }
@@ -745,5 +755,44 @@ fun CyberPartyCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PartyTypeChoiceCard(
+    title: String,
+    subtitle: String,
+    selected: Boolean,
+    selectedBg: Color,
+    selectedBorder: Color,
+    selectedText: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = LocalNanoColors.current
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (selected) selectedBg else colors.surfaceElevated)
+            .border(
+                width = if (selected) 2.dp else 1.dp,
+                color = if (selected) selectedBorder else colors.border,
+                shape = RoundedCornerShape(14.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 14.dp)
+    ) {
+        Text(
+            text = title,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp,
+            color = if (selected) selectedText else colors.textPrimary
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = subtitle,
+            fontSize = 11.sp,
+            color = if (selected) selectedText.copy(alpha = 0.9f) else colors.textMuted
+        )
     }
 }

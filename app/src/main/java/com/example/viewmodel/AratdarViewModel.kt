@@ -163,7 +163,7 @@ class AratdarViewModel(application: Application) : AndroidViewModel(application)
         openingBalance: Double,
         creditLimit: Double = 0.0,
         emptyBagsDue: Int = 0,
-        onSuccess: () -> Unit
+        onSuccess: (Long) -> Unit
     ) {
         viewModelScope.launch {
             val party = PartyEntity(
@@ -175,8 +175,8 @@ class AratdarViewModel(application: Application) : AndroidViewModel(application)
                 creditLimit = creditLimit,
                 emptyBagsDue = emptyBagsDue
             )
-            repository.insertParty(party)
-            onSuccess()
+            val id = repository.insertParty(party)
+            onSuccess(id)
         }
     }
 
@@ -187,7 +187,7 @@ class AratdarViewModel(application: Application) : AndroidViewModel(application)
         openingBags: Int,
         saleRate: Double,
         purchaseRate: Double,
-        onSuccess: () -> Unit
+        onSuccess: (Long) -> Unit
     ) {
         viewModelScope.launch {
             val product = ProductEntity(
@@ -198,8 +198,8 @@ class AratdarViewModel(application: Application) : AndroidViewModel(application)
                 defaultSaleRate = saleRate,
                 defaultPurchaseRate = purchaseRate
             )
-            repository.insertProduct(product)
-            onSuccess()
+            val id = repository.insertProduct(product)
+            onSuccess(id)
         }
     }
 

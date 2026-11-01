@@ -21,8 +21,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Payments
@@ -65,6 +67,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.example.data.local.entity.PartyEntity
 import com.example.data.local.entity.ProductEntity
 import com.example.data.local.entity.TransactionEntity
@@ -122,6 +125,34 @@ fun TransactionEntryScreen(
 
     // Dialog state for showing generated memo receipt
     var savedTransactionForMemo by remember { mutableStateOf<TransactionEntity?>(null) }
+    var showAddProductDialog by remember { mutableStateOf(false) }
+    var showAddPartyDialog by remember { mutableStateOf(false) }
+    var addPartyAsMiller by remember { mutableStateOf(false) }
+
+    var newProdName by remember { mutableStateOf("") }
+    var newProdCategory by remember { mutableStateOf("চিকন চাল") }
+    var newProdBagSize by remember { mutableStateOf("50") }
+    var newProdOpeningBags by remember { mutableStateOf("0") }
+    var newProdSaleRate by remember { mutableStateOf("0") }
+    var newProdPurchaseRate by remember { mutableStateOf("0") }
+
+    var newPartyName by remember { mutableStateOf("") }
+    var newPartyPhone by remember { mutableStateOf("") }
+    var newPartyAddress by remember { mutableStateOf("") }
+    var newPartyType by remember { mutableStateOf("CUSTOMER") }
+    var newPartyCreditLimit by remember { mutableStateOf("0") }
+    var newPartyEmptyBags by remember { mutableStateOf("0") }
+
+    val modeAccentBg = when {
+        !isSaleMode -> colors.badgeOrangeBg
+        isConsignment -> colors.badgeBlueBg
+        else -> colors.badgeSuccessBg
+    }
+    val modeAccentText = when {
+        !isSaleMode -> colors.badgeOrangeText
+        isConsignment -> colors.badgeBlueText
+        else -> colors.badgeSuccessText
+    }
 
     val bagCount = BanglaNumberUtils.toEnglishDigits(bagCountStr).toIntOrNull() ?: 0
     val ratePerBag = BanglaNumberUtils.toEnglishDigits(ratePerBagStr).toDoubleOrNull() ?: 0.0
@@ -154,11 +185,11 @@ fun TransactionEntryScreen(
         containerColor = colors.bg,
         topBar = {
             Surface(
-                color = colors.headerBg,
+                color = modeAccentBg,
                 shadowElevation = 0.dp,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(1.dp, colors.borderSubtle)
+                    .border(1.dp, modeAccentText.copy(alpha = 0.25f))
             ) {
                 Row(
                     modifier = Modifier
@@ -170,7 +201,7 @@ fun TransactionEntryScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "ফিরে যান",
-                            tint = colors.textPrimary
+                            tint = modeAccentText
                         )
                     }
                     Spacer(modifier = Modifier.width(6.dp))
@@ -179,12 +210,13 @@ fun TransactionEntryScreen(
                             text = if (isSaleMode) "নতুন বিক্রয় চালান তৈরি" else "নতুন ক্রয় চালান তৈরি",
                             fontWeight = FontWeight.Bold,
                             fontSize = 17.sp,
-                            color = colors.headerText
+                            color = modeAccentText
                         )
                         Text(
                             text = if (isConsignment) "কমিশন আড়তদারি (চালানী মাল বিক্রয়)" else if (isSaleMode) "নিজস্ব মজুদ থেকে বিক্রয় চালান" else "মিলার থেকে ক্রয় চালান",
-                            fontSize = 11.sp,
-                            color = colors.headerSubtext
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = modeAccentText.copy(alpha = 0.85f)
                         )
                     }
                 }
@@ -246,76 +278,70 @@ fun TransactionEntryScreen(
                 }
             }
 
-            // If Sale Mode: Toggle between Own Stock and Consignment
+            // Sale mode: large Own Stock vs Commission choice cards
             if (isSaleMode) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, colors.borderSubtle, RoundedCornerShape(16.dp)),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = colors.surface)
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Text(
-                            text = "চালানের প্রকৃতি নির্বাচন করুন:",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = colors.textPrimary
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "চালানের প্রকৃতি — কোনটা বেছে নিচ্ছেন?",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.textPrimary
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        TradeTypeChoiceCard(
+                            title = "নিজস্ব চাল",
+                            subtitle = "আপনার কেনা চাল বিক্রি",
+                            selected = !isConsignment,
+                            selectedBg = colors.badgeSuccessBg,
+                            selectedBorder = colors.badgeSuccessText,
+                            selectedText = colors.badgeSuccessText,
+                            onClick = { isConsignment = false },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("chip_own_stock")
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            FilterChip(
-                                selected = !isConsignment,
-                                onClick = { isConsignment = false },
-                                label = { Text("নিজস্ব চাল (Own Stock)", fontSize = 12.sp, fontWeight = FontWeight.Medium) },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .testTag("chip_own_stock"),
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = colors.badgeSuccessBg,
-                                    selectedLabelColor = colors.badgeSuccessText,
-                                    containerColor = colors.surfaceElevated,
-                                    labelColor = colors.textSecondary
-                                ),
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            FilterChip(
-                                selected = isConsignment,
-                                onClick = { isConsignment = true },
-                                label = { Text("কমিশন চালান (চালানী মাল)", fontSize = 12.sp, fontWeight = FontWeight.Medium) },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .testTag("chip_consignment"),
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = colors.badgeBlueBg,
-                                    selectedLabelColor = colors.badgeBlueText,
-                                    containerColor = colors.surfaceElevated,
-                                    labelColor = colors.textSecondary
-                                ),
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                        }
-
-                        if (isConsignment) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = null,
-                                    tint = colors.badgeBlueText,
-                                    modifier = Modifier.size(15.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "মিলারের চাল বিক্রি করে কমিশন ও লেবার খরচ কেটে মিলারের পাওনা হিসাব হবে।",
-                                    fontSize = 11.sp,
-                                    color = colors.badgeBlueText
-                                )
-                            }
-                        }
+                        TradeTypeChoiceCard(
+                            title = "কমিশন চালান",
+                            subtitle = "মিলারের চালানী মাল",
+                            selected = isConsignment,
+                            selectedBg = colors.badgeBlueBg,
+                            selectedBorder = colors.badgeBlueText,
+                            selectedText = colors.badgeBlueText,
+                            onClick = { isConsignment = true },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("chip_consignment")
+                        )
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(modeAccentBg)
+                            .border(1.dp, modeAccentText.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = modeAccentText,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (isConsignment) {
+                                "মিলারের চাল বিক্রি করবেন। কমিশন ও খালাসি কেটে মিলারকে প্রদেয় টাকা হিসাব হবে।"
+                            } else {
+                                "আপনার নিজের কেনা চাল বিক্রি করবেন। লাভ-লোকসান আপনার।"
+                            },
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = modeAccentText
+                        )
                     }
                 }
             }
@@ -384,6 +410,19 @@ fun TransactionEntryScreen(
                                     }
                                 )
                             }
+                            DropdownMenuItem(
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.Add, contentDescription = null, tint = colors.primary, modifier = Modifier.size(18.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("+ নতুন চাল যোগ করুন", fontWeight = FontWeight.Bold, color = colors.primary)
+                                    }
+                                },
+                                onClick = {
+                                    productDropdownExpanded = false
+                                    showAddProductDialog = true
+                                }
+                            )
                         }
                     }
 
@@ -540,6 +579,21 @@ fun TransactionEntryScreen(
                                         }
                                     )
                                 }
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(Icons.Default.Add, contentDescription = null, tint = colors.primary, modifier = Modifier.size(18.dp))
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text("+ নতুন পার্টি", fontWeight = FontWeight.Bold, color = colors.primary)
+                                        }
+                                    },
+                                    onClick = {
+                                        customerDropdownExpanded = false
+                                        addPartyAsMiller = false
+                                        newPartyType = "CUSTOMER"
+                                        showAddPartyDialog = true
+                                    }
+                                )
                             }
                         }
 
@@ -632,6 +686,21 @@ fun TransactionEntryScreen(
                                         }
                                     )
                                 }
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(Icons.Default.Add, contentDescription = null, tint = colors.primary, modifier = Modifier.size(18.dp))
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text("+ নতুন মিলার", fontWeight = FontWeight.Bold, color = colors.primary)
+                                        }
+                                    },
+                                    onClick = {
+                                        millerDropdownExpanded = false
+                                        addPartyAsMiller = true
+                                        newPartyType = "SUPPLIER"
+                                        showAddPartyDialog = true
+                                    }
+                                )
                             }
                         }
                     }
@@ -983,6 +1052,400 @@ fun TransactionEntryScreen(
                 savedTransactionForMemo = null
                 onNavigateBack()
             }
+        )
+    }
+
+    if (showAddProductDialog) {
+        Dialog(onDismissRequest = { showAddProductDialog = false }) {
+            Card(
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = colors.surface),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, colors.border, RoundedCornerShape(18.dp))
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("নতুন চালের জাত যোগ করুন", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = colors.textPrimary)
+                        IconButton(onClick = { showAddProductDialog = false }, modifier = Modifier.size(28.dp)) {
+                            Icon(Icons.Default.Close, contentDescription = "বন্ধ", tint = colors.textMuted)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = newProdName,
+                        onValueChange = { newProdName = it },
+                        label = { Text("চালের নাম", color = colors.textMuted) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = colors.textPrimary,
+                            unfocusedTextColor = colors.textPrimary,
+                            focusedBorderColor = colors.primary,
+                            unfocusedBorderColor = colors.border
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = newProdCategory,
+                        onValueChange = { newProdCategory = it },
+                        label = { Text("চালের ধরন (যেমন: চিকন চাল)", color = colors.textMuted) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = colors.textPrimary,
+                            unfocusedTextColor = colors.textPrimary,
+                            focusedBorderColor = colors.primary,
+                            unfocusedBorderColor = colors.border
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(
+                            selected = newProdBagSize == "50",
+                            onClick = { newProdBagSize = "50" },
+                            label = { Text("৫০ কেজি", fontSize = 12.sp) },
+                            modifier = Modifier.weight(1f),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = colors.primaryContainer,
+                                selectedLabelColor = colors.primary
+                            )
+                        )
+                        FilterChip(
+                            selected = newProdBagSize == "25",
+                            onClick = { newProdBagSize = "25" },
+                            label = { Text("২৫ কেজি", fontSize = 12.sp) },
+                            modifier = Modifier.weight(1f),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = colors.primaryContainer,
+                                selectedLabelColor = colors.primary
+                            )
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = newProdOpeningBags,
+                        onValueChange = { newProdOpeningBags = it },
+                        label = { Text("শুরুর স্টক বস্তা", color = colors.textMuted) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = colors.textPrimary,
+                            unfocusedTextColor = colors.textPrimary,
+                            focusedBorderColor = colors.primary,
+                            unfocusedBorderColor = colors.border
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = newProdSaleRate,
+                            onValueChange = { newProdSaleRate = it },
+                            label = { Text("বিক্রি দর", color = colors.textMuted) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = colors.textPrimary,
+                                unfocusedTextColor = colors.textPrimary,
+                                focusedBorderColor = colors.primary,
+                                unfocusedBorderColor = colors.border
+                            )
+                        )
+                        OutlinedTextField(
+                            value = newProdPurchaseRate,
+                            onValueChange = { newProdPurchaseRate = it },
+                            label = { Text("ক্রয় দর", color = colors.textMuted) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = colors.textPrimary,
+                                unfocusedTextColor = colors.textPrimary,
+                                focusedBorderColor = colors.primary,
+                                unfocusedBorderColor = colors.border
+                            )
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Button(
+                        onClick = {
+                            if (newProdName.isBlank()) return@Button
+                            val bags = BanglaNumberUtils.toEnglishDigits(newProdOpeningBags).toIntOrNull() ?: 0
+                            val sale = BanglaNumberUtils.toEnglishDigits(newProdSaleRate).toDoubleOrNull() ?: 0.0
+                            val purchase = BanglaNumberUtils.toEnglishDigits(newProdPurchaseRate).toDoubleOrNull() ?: 0.0
+                            val bagKg = newProdBagSize.toIntOrNull() ?: 50
+                            viewModel.addProduct(
+                                name = newProdName.trim(),
+                                category = newProdCategory.ifBlank { "চিকন চাল" },
+                                bagSizeKg = bagKg,
+                                openingBags = bags,
+                                saleRate = sale,
+                                purchaseRate = purchase
+                            ) { id ->
+                                selectedProduct = ProductEntity(
+                                    id = id,
+                                    name = newProdName.trim(),
+                                    category = newProdCategory.ifBlank { "চিকন চাল" },
+                                    bagSizeKg = bagKg,
+                                    currentBags = bags,
+                                    defaultSaleRate = sale,
+                                    defaultPurchaseRate = purchase
+                                )
+                                ratePerBagStr = if (isSaleMode) sale.toInt().toString() else purchase.toInt().toString()
+                                showAddProductDialog = false
+                                newProdName = ""
+                                newProdOpeningBags = "0"
+                                newProdSaleRate = "0"
+                                newProdPurchaseRate = "0"
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary)
+                    ) {
+                        Text("সংরক্ষণ করুন", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+
+    if (showAddPartyDialog) {
+        Dialog(onDismissRequest = { showAddPartyDialog = false }) {
+            Card(
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = colors.surface),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, colors.border, RoundedCornerShape(18.dp))
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (addPartyAsMiller) "নতুন মিলার যোগ করুন" else "নতুন খরিদ্দার যোগ করুন",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = colors.textPrimary
+                        )
+                        IconButton(onClick = { showAddPartyDialog = false }, modifier = Modifier.size(28.dp)) {
+                            Icon(Icons.Default.Close, contentDescription = "বন্ধ", tint = colors.textMuted)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        TradeTypeChoiceCard(
+                            title = "খরিদ্দার",
+                            subtitle = "যার কাছে বাকি পাব",
+                            selected = newPartyType == "CUSTOMER",
+                            selectedBg = colors.badgeSuccessBg,
+                            selectedBorder = colors.badgeSuccessText,
+                            selectedText = colors.badgeSuccessText,
+                            onClick = { newPartyType = "CUSTOMER" },
+                            modifier = Modifier.weight(1f)
+                        )
+                        TradeTypeChoiceCard(
+                            title = "মিলার",
+                            subtitle = "যাকে টাকা দিতে হবে",
+                            selected = newPartyType == "SUPPLIER",
+                            selectedBg = colors.badgeBlueBg,
+                            selectedBorder = colors.badgeBlueText,
+                            selectedText = colors.badgeBlueText,
+                            onClick = { newPartyType = "SUPPLIER" },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = newPartyName,
+                        onValueChange = { newPartyName = it },
+                        label = { Text("দোকান / পার্টির নাম", color = colors.textMuted) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = colors.textPrimary,
+                            unfocusedTextColor = colors.textPrimary,
+                            focusedBorderColor = colors.primary,
+                            unfocusedBorderColor = colors.border
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = newPartyPhone,
+                        onValueChange = { newPartyPhone = it },
+                        label = { Text("মোবাইল নম্বর", color = colors.textMuted) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = colors.textPrimary,
+                            unfocusedTextColor = colors.textPrimary,
+                            focusedBorderColor = colors.primary,
+                            unfocusedBorderColor = colors.border
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = newPartyAddress,
+                        onValueChange = { newPartyAddress = it },
+                        label = { Text("বাজারের ঠিকানা", color = colors.textMuted) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = colors.textPrimary,
+                            unfocusedTextColor = colors.textPrimary,
+                            focusedBorderColor = colors.primary,
+                            unfocusedBorderColor = colors.border
+                        )
+                    )
+                    if (newPartyType == "CUSTOMER") {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = newPartyCreditLimit,
+                            onValueChange = { newPartyCreditLimit = it },
+                            label = { Text("সর্বোচ্চ বাকি (০ = সীমা নেই)", color = colors.textMuted) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = colors.textPrimary,
+                                unfocusedTextColor = colors.textPrimary,
+                                focusedBorderColor = colors.primary,
+                                unfocusedBorderColor = colors.border
+                            )
+                        )
+                        Text(
+                            text = "এত টাকার বেশি বাকি হলে সতর্কবার্তা দেখাবে।",
+                            fontSize = 11.sp,
+                            color = colors.textMuted,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = newPartyEmptyBags,
+                            onValueChange = { newPartyEmptyBags = it },
+                            label = { Text("খালি বস্তা পাওনা (যদি থাকে)", color = colors.textMuted) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = colors.textPrimary,
+                                unfocusedTextColor = colors.textPrimary,
+                                focusedBorderColor = colors.primary,
+                                unfocusedBorderColor = colors.border
+                            )
+                        )
+                        Text(
+                            text = "ক্রেতাকে খালি চটের বস্তা দিলে এখানে লিখুন।",
+                            fontSize = 11.sp,
+                            color = colors.textMuted,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Button(
+                        onClick = {
+                            if (newPartyName.isBlank()) return@Button
+                            val limit = BanglaNumberUtils.toEnglishDigits(newPartyCreditLimit).toDoubleOrNull() ?: 0.0
+                            val bags = BanglaNumberUtils.toEnglishDigits(newPartyEmptyBags).toIntOrNull() ?: 0
+                            viewModel.addParty(
+                                name = newPartyName.trim(),
+                                phone = newPartyPhone.trim(),
+                                address = newPartyAddress.trim(),
+                                type = newPartyType,
+                                openingBalance = 0.0,
+                                creditLimit = if (newPartyType == "CUSTOMER") limit else 0.0,
+                                emptyBagsDue = if (newPartyType == "CUSTOMER") bags else 0
+                            ) { id ->
+                                val party = PartyEntity(
+                                    id = id,
+                                    name = newPartyName.trim(),
+                                    phone = newPartyPhone.trim(),
+                                    address = newPartyAddress.trim(),
+                                    type = newPartyType,
+                                    balance = 0.0,
+                                    creditLimit = if (newPartyType == "CUSTOMER") limit else 0.0,
+                                    emptyBagsDue = if (newPartyType == "CUSTOMER") bags else 0
+                                )
+                                if (newPartyType == "SUPPLIER") {
+                                    selectedMiller = party
+                                } else {
+                                    selectedCustomer = party
+                                }
+                                showAddPartyDialog = false
+                                newPartyName = ""
+                                newPartyPhone = ""
+                                newPartyAddress = ""
+                                newPartyCreditLimit = "0"
+                                newPartyEmptyBags = "0"
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary)
+                    ) {
+                        Text("সংরক্ষণ করুন", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TradeTypeChoiceCard(
+    title: String,
+    subtitle: String,
+    selected: Boolean,
+    selectedBg: Color,
+    selectedBorder: Color,
+    selectedText: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = LocalNanoColors.current
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (selected) selectedBg else colors.surfaceElevated)
+            .border(
+                width = if (selected) 2.dp else 1.dp,
+                color = if (selected) selectedBorder else colors.border,
+                shape = RoundedCornerShape(14.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 14.dp)
+    ) {
+        Text(
+            text = title,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp,
+            color = if (selected) selectedText else colors.textPrimary
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = subtitle,
+            fontSize = 11.sp,
+            color = if (selected) selectedText.copy(alpha = 0.9f) else colors.textMuted
         )
     }
 }

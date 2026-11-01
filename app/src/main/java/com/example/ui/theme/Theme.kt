@@ -1,7 +1,7 @@
 package com.example.ui.theme
 
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -39,74 +39,76 @@ data class NanoCustomColors(
     val navPillActive: Color
 )
 
-val LocalNanoColors = staticCompositionLocalOf {
-    SoftDarkThemeColors
-}
-
-// Backwards-compatible alias for existing composables
-val LocalAratdarColors get() = LocalNanoColors
-
-val SoftDarkThemeColors = NanoCustomColors(
-    bg = SoftDarkBg,
-    bgGradientEnd = SoftDarkBgGradientEnd,
-    surface = SoftDarkCardSurface,
-    surfaceElevated = SoftDarkCardElevated,
-    headerBg = SoftDarkBg,
-    headerText = SoftDarkTextPrimary,
-    headerSubtext = SoftDarkTextMuted,
-    border = SoftDarkCardBorder,
-    borderSubtle = SoftDarkCardBorderSubtle,
-    textPrimary = SoftDarkTextPrimary,
-    textSecondary = SoftDarkTextSecondary,
-    textMuted = SoftDarkTextMuted,
-    primary = SoftDarkTeal,
-    onPrimary = Color(0xFF03221E),
-    primaryContainer = SoftDarkTealBg,
-    onPrimaryContainer = SoftDarkTealText,
-    badgeSuccessBg = SoftDarkEmeraldBg,
-    badgeSuccessText = SoftDarkEmeraldText,
-    badgeDangerBg = SoftDarkRoseBg,
-    badgeDangerText = SoftDarkRoseText,
-    badgeBlueBg = SoftDarkBlueBg,
-    badgeBlueText = SoftDarkBlueText,
-    badgeAmberBg = SoftDarkAmberBg,
-    badgeAmberText = SoftDarkAmberText,
-    badgeOrangeBg = SoftDarkOrangeBg,
-    badgeOrangeText = SoftDarkOrangeText,
-    navBg = SoftDarkNavBg,
-    navBorder = SoftDarkNavBorder,
-    navPillActive = SoftDarkNavPillActive
+val CreamThemeColors = NanoCustomColors(
+    bg = CreamBg,
+    bgGradientEnd = CreamBgGradientEnd,
+    surface = CreamCardSurface,
+    surfaceElevated = CreamCardElevated,
+    headerBg = CreamCardSurface,
+    headerText = CreamTextPrimary,
+    headerSubtext = CreamTextMuted,
+    border = CreamCardBorder,
+    borderSubtle = CreamCardBorderSubtle,
+    textPrimary = CreamTextPrimary,
+    textSecondary = CreamTextSecondary,
+    textMuted = CreamTextMuted,
+    primary = CreamGreen,
+    onPrimary = Color(0xFFFFFBF5),
+    primaryContainer = CreamGreenBg,
+    onPrimaryContainer = CreamGreenText,
+    badgeSuccessBg = CreamEmeraldBg,
+    badgeSuccessText = CreamEmeraldText,
+    badgeDangerBg = CreamTerracottaBg,
+    badgeDangerText = CreamTerracottaText,
+    badgeBlueBg = CreamBlueBg,
+    badgeBlueText = CreamBlueText,
+    badgeAmberBg = CreamAmberBg,
+    badgeAmberText = CreamAmberText,
+    badgeOrangeBg = CreamOrangeBg,
+    badgeOrangeText = CreamOrangeText,
+    navBg = CreamNavBg,
+    navBorder = CreamNavBorder,
+    navPillActive = CreamNavPillActive
 )
 
-private val DarkColorScheme = darkColorScheme(
-    primary = SoftDarkTeal,
-    onPrimary = Color(0xFF03221E),
-    primaryContainer = SoftDarkTealBg,
-    onPrimaryContainer = SoftDarkTealText,
-    secondary = SoftDarkOrange,
-    onSecondary = Color.Black,
-    secondaryContainer = SoftDarkOrangeBg,
-    onSecondaryContainer = SoftDarkOrangeText,
-    tertiary = SoftDarkEmerald,
-    background = SoftDarkBg,
-    onBackground = SoftDarkTextPrimary,
-    surface = SoftDarkCardSurface,
-    onSurface = SoftDarkTextPrimary,
-    surfaceVariant = SoftDarkCardElevated,
-    onSurfaceVariant = SoftDarkTextSecondary,
-    outline = SoftDarkCardBorder,
-    error = SoftDarkRose,
-    errorContainer = SoftDarkRoseBg
+/** Old name kept so existing call sites still compile. */
+val SoftDarkThemeColors = CreamThemeColors
+
+val LocalNanoColors = staticCompositionLocalOf {
+    CreamThemeColors
+}
+
+val LocalAratdarColors get() = LocalNanoColors
+
+private val CreamColorScheme = lightColorScheme(
+    primary = CreamGreen,
+    onPrimary = Color(0xFFFFFBF5),
+    primaryContainer = CreamGreenBg,
+    onPrimaryContainer = CreamGreenText,
+    secondary = CreamOrange,
+    onSecondary = Color(0xFFFFFBF5),
+    secondaryContainer = CreamOrangeBg,
+    onSecondaryContainer = CreamOrangeText,
+    tertiary = CreamBlue,
+    background = CreamBg,
+    onBackground = CreamTextPrimary,
+    surface = CreamCardSurface,
+    onSurface = CreamTextPrimary,
+    surfaceVariant = CreamCardElevated,
+    onSurfaceVariant = CreamTextSecondary,
+    outline = CreamCardBorder,
+    error = CreamTerracotta,
+    errorContainer = CreamTerracottaBg
 )
 
 @Composable
 fun MyApplicationTheme(
-    darkTheme: Boolean = true,
+    darkTheme: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    CompositionLocalProvider(LocalNanoColors provides SoftDarkThemeColors) {
+    CompositionLocalProvider(LocalNanoColors provides CreamThemeColors) {
         MaterialTheme(
-            colorScheme = DarkColorScheme,
+            colorScheme = CreamColorScheme,
             typography = Typography,
             content = content
         )
