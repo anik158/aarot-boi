@@ -13,13 +13,18 @@ import com.example.data.repository.AratdarRepository
 import com.example.util.DeviceBindingManager
 import com.example.util.DeviceBindingState
 import com.example.util.LedgerMath
+import com.example.util.LicenseClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.Calendar
 
 data class DashboardMetrics(
@@ -51,6 +56,9 @@ class AratdarViewModel(application: Application) : AndroidViewModel(application)
 
     private val repository: AratdarRepository
     private val deviceBindingManager = DeviceBindingManager(application)
+    private val licenseMutex = Mutex()
+    private val _gateMessage = MutableStateFlow("")
+    val gateMessage: StateFlow<String> = _gateMessage.asStateFlow()
 
     val bindingState: StateFlow<DeviceBindingState> = deviceBindingManager.bindingState
 
@@ -71,7 +79,9 @@ class AratdarViewModel(application: Application) : AndroidViewModel(application)
             count10 = savedCount[6]
         )
         viewModelScope.launch {
-            repository.checkAndSeedSampleData()
+            if (deviceBindingManager.bindingState.value.shopName.isNotBlank()) {
+                refreshLicense()
+            }
         }
     }
 
@@ -148,9 +158,24 @@ class AratdarViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun adjustStock(productId: Long, productName: String, delta: Int, reason: String, onSuccess: () -> Unit) {
+    fun adjustStock(
+        productId: Long,
+        productName: String,
+        delta: Int,
+        reason: String,
+        supplierId: Long = 0L,
+        supplierName: String = "",
+        onSuccess: () -> Unit
+    ) {
         viewModelScope.launch {
-            repository.adjustStock(productId, productName, delta, reason)
+            repository.adjustStock(productId, productName, delta, reason, supplierId, supplierName)
+            onSuccess()
+        }
+    }
+
+    fun deleteProduct(productId: Long, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            repository.deleteProduct(productId)
             onSuccess()
         }
     }
@@ -187,6 +212,8 @@ class AratdarViewModel(application: Application) : AndroidViewModel(application)
         openingBags: Int,
         saleRate: Double,
         purchaseRate: Double,
+        supplierId: Long = 0L,
+        supplierName: String = "",
         onSuccess: (Long) -> Unit
     ) {
         viewModelScope.launch {
@@ -198,13 +225,82 @@ class AratdarViewModel(application: Application) : AndroidViewModel(application)
                 defaultSaleRate = saleRate,
                 defaultPurchaseRate = purchaseRate
             )
-            val id = repository.insertProduct(product)
+            val id = repository.insertProduct(
+                product,
+                supplierId = if (openingBags > 0) supplierId else 0L,
+                supplierName = if (openingBags > 0) supplierName else ""
+            )
             onSuccess(id)
         }
     }
 
-    fun updateRegistration(shopName: String, proprietorName: String, phone: String, googleAccount: String) {
-        deviceBindingManager.updateRegistration(shopName, proprietorName, phone, googleAccount)
+    fun requestAccess(shopName: String, proprietorName: String, phone: String) {
+        viewModelScope.launch {
+            licenseMutex.withLock {
+                deviceBindingManager.saveShopProfile(shopName, proprietorName, phone)
+                if (deviceBindingManager.bindingState.value.licenseStatus != "approved") {
+                    deviceBindingManager.setLicenseStatus("pending")
+                }
+                val state = deviceBindingManager.bindingState.value
+                val registered = withContext(Dispatchers.IO) { LicenseClient.register(state) }
+                if (!registered) {
+                    _gateMessage.value = "একবার ইন্টারনেট লাগবে। তারপর আবার চেষ্টা করুন।"
+                    return@withLock
+                }
+                _gateMessage.value = ""
+                val remote = withContext(Dispatchers.IO) { LicenseClient.status(state.deviceId) }
+                applyRemoteStatus(remote)
+            }
+        }
+    }
+
+    fun refreshLicense() {
+        viewModelScope.launch {
+            licenseMutex.withLock {
+                val state = deviceBindingManager.bindingState.value
+                if (state.deviceId.isBlank()) return@withLock
+                val remote = withContext(Dispatchers.IO) { LicenseClient.status(state.deviceId) }
+                applyRemoteStatus(remote)
+            }
+        }
+    }
+
+    private fun applyRemoteStatus(remote: String?) {
+        if (remote == null) {
+            if (!deviceBindingManager.bindingState.value.isActivated) {
+                _gateMessage.value = "একবার ইন্টারনেট লাগবে। তারপর আবার চেষ্টা করুন।"
+            }
+            return
+        }
+        _gateMessage.value = ""
+        val current = deviceBindingManager.bindingState.value.licenseStatus
+        when (remote) {
+            "approved" -> deviceBindingManager.setLicenseStatus("approved")
+            "revoked" -> deviceBindingManager.setLicenseStatus("revoked")
+            "unknown" -> if (current == "approved") {
+                deviceBindingManager.setLicenseStatus("revoked")
+            } else {
+                deviceBindingManager.setLicenseStatus("pending")
+                _gateMessage.value = "এই ফোনটি এখনো তালিকায় নেই। আবার চেষ্টা করুন।"
+            }
+            else -> deviceBindingManager.setLicenseStatus("pending")
+        }
+    }
+
+    fun updateRegistration(
+        shopName: String,
+        proprietorName: String,
+        phone: String,
+        googleAccount: String,
+        defaultLaborCost: Double
+    ) {
+        deviceBindingManager.updateRegistration(
+            shopName,
+            proprietorName,
+            phone,
+            googleAccount,
+            defaultLaborCost
+        )
     }
 
     fun updateDenomination(

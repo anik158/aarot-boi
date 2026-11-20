@@ -29,6 +29,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.navigation.Screen
+import com.example.ui.screens.ApprovalGateScreen
 import com.example.ui.screens.DashboardScreen
 import com.example.ui.screens.KhataScreen
 import com.example.ui.screens.PartiesScreen
@@ -70,6 +72,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainAppContainer(viewModel: AratdarViewModel) {
     val colors = LocalNanoColors.current
+    val binding by viewModel.bindingState.collectAsState()
+    if (!binding.isActivated) {
+        ApprovalGateScreen(viewModel)
+        return
+    }
 
     // Exactly 4 Core Navigation Items as requested:
     // 1. হোম | 2. খাতা | 3. নতুন চালান | 4. দেনা-পাওনা

@@ -12,12 +12,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -58,7 +61,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.data.local.entity.PartyEntity
 import com.example.data.local.entity.ProductEntity
+import com.example.ui.components.OptionalMillerField
 import com.example.ui.theme.LocalNanoColors
 import com.example.util.BanglaNumberUtils
 import com.example.viewmodel.AratdarViewModel
@@ -70,6 +75,9 @@ fun StockScreen(
 ) {
     val colors = LocalNanoColors.current
     val products by viewModel.products.collectAsState()
+    val parties by viewModel.parties.collectAsState()
+    val transactions by viewModel.transactions.collectAsState()
+    val stockLogs by viewModel.stockLogs.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
 
     // Dialog state for Stock Adjustment
@@ -77,6 +85,8 @@ fun StockScreen(
     var adjustDeltaStr by remember { mutableStateOf("") }
     var isAddingBags by remember { mutableStateOf(true) }
     var adjustReasonStr by remember { mutableStateOf("") }
+    var selectedIntakeMiller by remember { mutableStateOf<PartyEntity?>(null) }
+    var productPendingDelete by remember { mutableStateOf<ProductEntity?>(null) }
 
     // Dialog state for adding new product
     var showAddProductDialog by remember { mutableStateOf(false) }
@@ -86,6 +96,7 @@ fun StockScreen(
     var newProdOpeningBags by remember { mutableStateOf("") }
     var newProdSaleRate by remember { mutableStateOf("") }
     var newProdPurchaseRate by remember { mutableStateOf("") }
+    var newProdMiller by remember { mutableStateOf<PartyEntity?>(null) }
 
     val filteredProducts = products.filter {
         it.name.contains(searchQuery, ignoreCase = true) || it.category.contains(searchQuery, ignoreCase = true)
@@ -176,13 +187,21 @@ fun StockScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(filteredProducts) { product ->
+                    val lastMiller = stockLogs
+                        .filter { it.productId == product.id && it.type == "IN" && it.supplierName.isNotBlank() }
+                        .maxByOrNull { it.id }
+                        ?.supplierName
                     CyberProductCard(
                         product = product,
+                        lastMillerName = lastMiller,
                         onAdjustClick = {
                             selectedProductForAdjust = product
                             adjustDeltaStr = ""
                             adjustReasonStr = ""
-                        }
+                            isAddingBags = true
+                            selectedIntakeMiller = null
+                        },
+                        onDeleteClick = { productPendingDelete = product }
                     )
                 }
 
@@ -206,6 +225,8 @@ fun StockScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .heightIn(max = 560.dp)
+                        .verticalScroll(rememberScrollState())
                         .padding(20.dp)
                 ) {
                     Row(
@@ -301,6 +322,15 @@ fun StockScreen(
                         singleLine = true
                     )
 
+                    if (isAddingBags) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        OptionalMillerField(
+                            parties = parties,
+                            selectedMiller = selectedIntakeMiller,
+                            onMillerSelected = { selectedIntakeMiller = it }
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
@@ -313,6 +343,8 @@ fun StockScreen(
                                     productName = product.name,
                                     delta = delta,
                                     reason = adjustReasonStr.ifEmpty { if (isAddingBags) "হাতে গোডাউন ইন" else "ঘাটতি সমন্বয়" },
+                                    supplierId = if (isAddingBags) selectedIntakeMiller?.id ?: 0L else 0L,
+                                    supplierName = if (isAddingBags) selectedIntakeMiller?.name.orEmpty() else "",
                                     onSuccess = { selectedProductForAdjust = null }
                                 )
                             }
@@ -344,6 +376,8 @@ fun StockScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .heightIn(max = 560.dp)
+                        .verticalScroll(rememberScrollState())
                         .padding(20.dp)
                 ) {
                     Row(
@@ -428,6 +462,16 @@ fun StockScreen(
                         )
                     )
 
+                    val openingBagsPreview = BanglaNumberUtils.toEnglishDigits(newProdOpeningBags).toIntOrNull() ?: 0
+                    if (openingBagsPreview > 0) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        OptionalMillerField(
+                            parties = parties,
+                            selectedMiller = newProdMiller,
+                            onMillerSelected = { newProdMiller = it }
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Row(
@@ -470,14 +514,20 @@ fun StockScreen(
                     Button(
                         onClick = {
                             if (newProdName.isNotBlank()) {
+                                val bags = BanglaNumberUtils.toEnglishDigits(newProdOpeningBags).toIntOrNull() ?: 0
                                 viewModel.addProduct(
                                     name = newProdName,
                                     category = newProdCategory,
                                     bagSizeKg = newProdBagSize.toIntOrNull() ?: 50,
-                                    openingBags = BanglaNumberUtils.toEnglishDigits(newProdOpeningBags).toIntOrNull() ?: 0,
+                                    openingBags = bags,
                                     saleRate = BanglaNumberUtils.toEnglishDigits(newProdSaleRate).toDoubleOrNull() ?: 0.0,
                                     purchaseRate = BanglaNumberUtils.toEnglishDigits(newProdPurchaseRate).toDoubleOrNull() ?: 0.0,
-                                    onSuccess = { showAddProductDialog = false }
+                                    supplierId = if (bags > 0) newProdMiller?.id ?: 0L else 0L,
+                                    supplierName = if (bags > 0) newProdMiller?.name.orEmpty() else "",
+                                    onSuccess = {
+                                        newProdMiller = null
+                                        showAddProductDialog = false
+                                    }
                                 )
                             }
                         },
@@ -494,12 +544,79 @@ fun StockScreen(
             }
         }
     }
+
+    productPendingDelete?.let { product ->
+        val chalanCount = transactions.count { it.productId == product.id }
+        Dialog(onDismissRequest = { productPendingDelete = null }) {
+            Card(
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = colors.surface),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, colors.border, RoundedCornerShape(18.dp))
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "চাল মুছে ফেলবেন?",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = colors.textPrimary
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "${product.name} মাল খাতা থেকে উঠে যাবে। বাকি ${BanglaNumberUtils.toBanglaDigits(product.currentBags)} বস্তা মোট মজুদ থেকে বাদ যাবে। ক্যাশ, খরিদ্দারের বাকি এবং মিলারের পাওনা অপরিবর্তিত থাকবে।",
+                        fontSize = 13.sp,
+                        color = colors.textSecondary
+                    )
+                    if (chalanCount > 0) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "এই চালে ${BanglaNumberUtils.toBanglaDigits(chalanCount)}টি চালান আছে। পুরনো মেমো, বাকি এবং খালাসি ক্যাশ থেকে যাবে। বিক্রি বাতিল হবে না।",
+                            fontSize = 13.sp,
+                            color = colors.badgeDangerText
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = { productPendingDelete = null },
+                            colors = ButtonDefaults.buttonColors(containerColor = colors.surfaceElevated),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("বাতিল", color = colors.textSecondary)
+                        }
+                        Button(
+                            onClick = {
+                                viewModel.deleteProduct(product.id) {
+                                    productPendingDelete = null
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.badgeDangerText,
+                                contentColor = colors.surface
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("confirm_delete_product_button")
+                        ) {
+                            Text("মুছুন", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
 fun CyberProductCard(
     product: ProductEntity,
-    onAdjustClick: () -> Unit
+    lastMillerName: String?,
+    onAdjustClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     val colors = LocalNanoColors.current
 
@@ -546,6 +663,13 @@ fun CyberProductCard(
                             fontSize = 11.sp,
                             color = colors.textMuted
                         )
+                        if (!lastMillerName.isNullOrBlank()) {
+                            Text(
+                                text = "শেষ মিলার: $lastMillerName",
+                                fontSize = 11.sp,
+                                color = colors.badgeBlueText
+                            )
+                        }
                     }
                 }
 
@@ -574,7 +698,7 @@ fun CyberProductCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "বিক্রয় দর: ${BanglaNumberUtils.formatCurrency(product.defaultSaleRate)} /বস্তা",
                         fontSize = 12.sp,
@@ -588,18 +712,33 @@ fun CyberProductCard(
                     )
                 }
 
-                Button(
-                    onClick = onAdjustClick,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = colors.surfaceElevated,
-                        contentColor = colors.textPrimary
-                    ),
-                    modifier = Modifier.height(36.dp)
-                ) {
-                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("স্টক ইন/আউট", fontSize = 11.sp)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Button(
+                        onClick = onDeleteClick,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colors.badgeDangerBg,
+                            contentColor = colors.badgeDangerText
+                        ),
+                        modifier = Modifier
+                            .height(36.dp)
+                            .testTag("delete_product_button")
+                    ) {
+                        Text("মুছুন", fontSize = 11.sp)
+                    }
+                    Button(
+                        onClick = onAdjustClick,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colors.surfaceElevated,
+                            contentColor = colors.textPrimary
+                        ),
+                        modifier = Modifier.height(36.dp)
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("স্টক ইন/আউট", fontSize = 11.sp)
+                    }
                 }
             }
         }

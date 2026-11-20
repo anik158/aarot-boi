@@ -17,4 +17,7 @@ interface StockLogDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLog(log: StockLogEntity): Long
+
+    @Query("DELETE FROM stock_logs WHERE productId = :productId")
+    suspend fun deleteLogsForProduct(productId: Long)
 }

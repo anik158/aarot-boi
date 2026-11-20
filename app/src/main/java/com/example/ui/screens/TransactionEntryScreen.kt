@@ -72,6 +72,7 @@ import com.example.data.local.entity.PartyEntity
 import com.example.data.local.entity.ProductEntity
 import com.example.data.local.entity.TransactionEntity
 import com.example.ui.components.ChalanMemoDialog
+import com.example.ui.components.OptionalMillerField
 import com.example.ui.theme.LocalNanoColors
 import com.example.util.BanglaNumberUtils
 import com.example.util.LedgerMath
@@ -87,6 +88,7 @@ fun TransactionEntryScreen(
     val colors = LocalNanoColors.current
     val products by viewModel.products.collectAsState()
     val parties by viewModel.parties.collectAsState()
+    val bindingState by viewModel.bindingState.collectAsState()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -113,7 +115,9 @@ fun TransactionEntryScreen(
 
     // Consignment deductions
     var commissionPerBagStr by remember { mutableStateOf("20") }
-    var laborCostStr by remember { mutableStateOf("500") }
+    val laborDefault = bindingState.defaultLaborCost
+    val laborDefaultText = if (laborDefault % 1.0 == 0.0) laborDefault.toLong().toString() else laborDefault.toString()
+    var laborCostStr by remember { mutableStateOf(laborDefaultText) }
 
     // Payment details
     var paidAmountStr by remember { mutableStateOf("0") }
@@ -135,6 +139,7 @@ fun TransactionEntryScreen(
     var newProdOpeningBags by remember { mutableStateOf("0") }
     var newProdSaleRate by remember { mutableStateOf("0") }
     var newProdPurchaseRate by remember { mutableStateOf("0") }
+    var newProdMiller by remember { mutableStateOf<PartyEntity?>(null) }
 
     var newPartyName by remember { mutableStateOf("") }
     var newPartyPhone by remember { mutableStateOf("") }
@@ -1146,6 +1151,15 @@ fun TransactionEntryScreen(
                             unfocusedBorderColor = colors.border
                         )
                     )
+                    val openingBagsPreview = BanglaNumberUtils.toEnglishDigits(newProdOpeningBags).toIntOrNull() ?: 0
+                    if (openingBagsPreview > 0) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OptionalMillerField(
+                            parties = parties,
+                            selectedMiller = newProdMiller,
+                            onMillerSelected = { newProdMiller = it }
+                        )
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
@@ -1191,7 +1205,9 @@ fun TransactionEntryScreen(
                                 bagSizeKg = bagKg,
                                 openingBags = bags,
                                 saleRate = sale,
-                                purchaseRate = purchase
+                                purchaseRate = purchase,
+                                supplierId = if (bags > 0) newProdMiller?.id ?: 0L else 0L,
+                                supplierName = if (bags > 0) newProdMiller?.name.orEmpty() else ""
                             ) { id ->
                                 selectedProduct = ProductEntity(
                                     id = id,
@@ -1208,6 +1224,7 @@ fun TransactionEntryScreen(
                                 newProdOpeningBags = "0"
                                 newProdSaleRate = "0"
                                 newProdPurchaseRate = "0"
+                                newProdMiller = null
                             }
                         },
                         modifier = Modifier.fillMaxWidth().height(48.dp),

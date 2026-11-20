@@ -11,8 +11,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -39,8 +43,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -52,12 +58,15 @@ import com.example.util.DeviceBindingState
 fun DeviceBindingDialog(
     bindingState: DeviceBindingState,
     onDismiss: () -> Unit,
-    onSave: (shopName: String, ownerName: String, phone: String) -> Unit
+    onSave: (shopName: String, ownerName: String, phone: String, defaultLaborCost: Double) -> Unit
 ) {
     val colors = LocalNanoColors.current
     var shopName by remember { mutableStateOf(bindingState.shopName) }
     var ownerName by remember { mutableStateOf(bindingState.proprietorName) }
     var phone by remember { mutableStateOf(bindingState.phone) }
+    var laborCostStr by remember(bindingState.defaultLaborCost) {
+        mutableStateOf(formatLaborAmount(bindingState.defaultLaborCost))
+    }
     var isEditing by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -72,6 +81,8 @@ fun DeviceBindingDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .heightIn(max = 560.dp)
+                    .verticalScroll(rememberScrollState())
                     .padding(20.dp)
             ) {
                 // Header
@@ -185,6 +196,21 @@ fun DeviceBindingDialog(
                             Text("অফলাইন এক্সেস:", fontSize = 12.sp, color = colors.textMuted)
                             Text("নিরাপদ ও সক্রিয়", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = colors.badgeSuccessText)
                         }
+                        HorizontalDivider(color = colors.borderSubtle)
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("ডিফল্ট খালাসি:", fontSize = 12.sp, color = colors.textMuted)
+                            Text(
+                                BanglaNumberUtils.formatCurrency(bindingState.defaultLaborCost),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = colors.textPrimary
+                            )
+                        }
+                        Text(
+                            text = "এক কমিশন চালানের মোট। বস্তাপ্রতি নয়।",
+                            fontSize = 11.sp,
+                            color = colors.textMuted
+                        )
                     }
                 }
 
@@ -232,6 +258,26 @@ fun DeviceBindingDialog(
                         ),
                         singleLine = true
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = laborCostStr,
+                        onValueChange = { laborCostStr = it },
+                        label = { Text("ডিফল্ট খালাসি খরচ", color = colors.textMuted) },
+                        supportingText = {
+                            Text("এক কমিশন চালানের মোট। বস্তাপ্রতি নয়।", color = colors.textMuted, fontSize = 11.sp)
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("default_labor_cost_input"),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = colors.textPrimary,
+                            unfocusedTextColor = colors.textPrimary,
+                            focusedBorderColor = colors.primary,
+                            unfocusedBorderColor = colors.border
+                        ),
+                        singleLine = true
+                    )
                     Spacer(modifier = Modifier.height(14.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -246,7 +292,9 @@ fun DeviceBindingDialog(
                         }
                         Button(
                             onClick = {
-                                onSave(shopName, ownerName, phone)
+                                val parsed = BanglaNumberUtils.toEnglishDigits(laborCostStr).toDoubleOrNull()
+                                val labor = if (parsed != null && parsed >= 0.0) parsed else bindingState.defaultLaborCost
+                                onSave(shopName, ownerName, phone, labor)
                                 isEditing = false
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = colors.primary),
@@ -287,4 +335,9 @@ fun DeviceBindingDialog(
             }
         }
     }
+}
+
+private fun formatLaborAmount(amount: Double): String {
+    val whole = amount.toLong()
+    return if (amount == whole.toDouble()) whole.toString() else amount.toString()
 }

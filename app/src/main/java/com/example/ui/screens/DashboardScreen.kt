@@ -68,6 +68,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -75,6 +76,7 @@ import com.example.data.local.entity.TransactionEntity
 import com.example.ui.components.ChalanMemoDialog
 import com.example.ui.components.DeviceBindingDialog
 import com.example.ui.theme.LocalNanoColors
+import com.example.util.AppCredits
 import com.example.util.BanglaNumberUtils
 import com.example.viewmodel.AratdarViewModel
 import java.text.SimpleDateFormat
@@ -394,7 +396,15 @@ fun DashboardScreen(
                 }
 
                 item {
-                    Spacer(modifier = Modifier.height(60.dp))
+                    Text(
+                        text = AppCredits.LINE,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp, bottom = 72.dp),
+                        textAlign = TextAlign.Center,
+                        fontSize = 11.sp,
+                        color = colors.textMuted
+                    )
                 }
             }
         }
@@ -412,8 +422,8 @@ fun DashboardScreen(
             DeviceBindingDialog(
                 bindingState = bindingState,
                 onDismiss = { showDeviceBindingDialog = false },
-                onSave = { name, owner, phone ->
-                    viewModel.updateRegistration(name, owner, phone, bindingState.googleAccount)
+                onSave = { name, owner, phone, labor ->
+                    viewModel.updateRegistration(name, owner, phone, bindingState.googleAccount, labor)
                 }
             )
         }

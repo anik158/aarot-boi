@@ -13,5 +13,7 @@ data class StockLogEntity(
     val type: String, // "IN", "OUT", "ADJUSTMENT"
     val changeBags: Int,
     val resultingBags: Int,
-    val reason: String = ""
+    val reason: String = "",
+    val supplierId: Long = 0L,
+    val supplierName: String = ""
 )

@@ -8,16 +8,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.util.UUID
 
 data class DeviceBindingState(
-    val isActivated: Boolean = true,
-    val shopName: String = "মেসার্স চালের আরত",
-    val proprietorName: String = "মো: রফিকুল ইসলাম",
-    val phone: String = "01712-345678",
-    val deviceId: String = "ARAT-BD-7989-9266",
+    val isActivated: Boolean = false,
+    val shopName: String = "",
+    val proprietorName: String = "",
+    val phone: String = "",
+    val deviceId: String = "",
     val googleAccount: String = "ahsanulhouqe321@gmail.com",
-    val licenseStatus: String = "সক্রিয় (Active License)",
+    val licenseStatus: String = "pending",
     val graceDaysRemaining: Int = 30,
     val isOfflineMode: Boolean = true,
-    val canAccessOffline: Boolean = true
+    val canAccessOffline: Boolean = true,
+    val defaultLaborCost: Double = 500.0
 )
 
 class DeviceBindingManager(context: Context) {
@@ -28,28 +29,30 @@ class DeviceBindingManager(context: Context) {
     val bindingState: StateFlow<DeviceBindingState> = _bindingState.asStateFlow()
 
     private fun loadState(): DeviceBindingState {
-        val activated = prefs.getBoolean("is_activated", true)
-        val shopName = prefs.getString("shop_name", "মেসার্স চালের আরত") ?: "মেসার্স চালের আরত"
-        val proprietor = prefs.getString("proprietor_name", "মো: রফিকুল ইসলাম") ?: "মো: রফিকুল ইসলাম"
-        val phone = prefs.getString("phone", "01712-345678") ?: "01712-345678"
+        val licenseStatus = prefs.getString("license_status", "pending") ?: "pending"
+        val shopName = prefs.getString("shop_name", "") ?: ""
+        val proprietor = prefs.getString("proprietor_name", "") ?: ""
+        val phone = prefs.getString("phone", "") ?: ""
         var deviceId = prefs.getString("device_id", "")
         if (deviceId.isNullOrEmpty()) {
             deviceId = "ARAT-BD-" + UUID.randomUUID().toString().take(8).uppercase()
             prefs.edit().putString("device_id", deviceId).apply()
         }
         val googleAccount = prefs.getString("google_account", "ahsanulhouqe321@gmail.com") ?: "ahsanulhouqe321@gmail.com"
+        val defaultLaborCost = prefs.getString("default_labor_cost", null)?.toDoubleOrNull() ?: 500.0
 
         return DeviceBindingState(
-            isActivated = activated,
+            isActivated = licenseStatus == "approved",
             shopName = shopName,
             proprietorName = proprietor,
             phone = phone,
             deviceId = deviceId,
             googleAccount = googleAccount,
-            licenseStatus = "সক্রিয় (Active License)",
+            licenseStatus = licenseStatus,
             graceDaysRemaining = 30,
             isOfflineMode = true,
-            canAccessOffline = true
+            canAccessOffline = true,
+            defaultLaborCost = defaultLaborCost
         )
     }
 
@@ -67,15 +70,40 @@ class DeviceBindingManager(context: Context) {
         editor.apply()
     }
 
-    fun updateRegistration(shopName: String, proprietorName: String, phone: String, googleAccount: String) {
+    fun updateRegistration(
+        shopName: String,
+        proprietorName: String,
+        phone: String,
+        googleAccount: String,
+        defaultLaborCost: Double = 500.0
+    ) {
+        val storedLabor = if (defaultLaborCost % 1.0 == 0.0) {
+            defaultLaborCost.toLong().toString()
+        } else {
+            defaultLaborCost.toString()
+        }
         prefs.edit()
-            .putBoolean("is_activated", true)
             .putString("shop_name", shopName)
             .putString("proprietor_name", proprietorName)
             .putString("phone", phone)
             .putString("google_account", googleAccount)
+            .putString("default_labor_cost", storedLabor)
             .apply()
 
+        _bindingState.value = loadState()
+    }
+
+    fun saveShopProfile(shopName: String, proprietorName: String, phone: String) {
+        prefs.edit()
+            .putString("shop_name", shopName.trim())
+            .putString("proprietor_name", proprietorName.trim())
+            .putString("phone", phone.trim())
+            .apply()
+        _bindingState.value = loadState()
+    }
+
+    fun setLicenseStatus(status: String) {
+        prefs.edit().putString("license_status", status).apply()
         _bindingState.value = loadState()
     }
 }

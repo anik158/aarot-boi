@@ -73,11 +73,13 @@ class ExampleRobolectricTest {
         val bindingManager = DeviceBindingManager(context)
         val state = bindingManager.bindingState.value
 
-        assertTrue(state.isActivated)
+        assertFalse(state.isActivated)
+        assertEquals("pending", state.licenseStatus)
         assertTrue(state.deviceId.startsWith("ARAT-BD-"))
-        assertEquals("মেসার্স চালের আরত", state.shopName)
+        assertEquals("", state.shopName)
         assertEquals(30, state.graceDaysRemaining)
         assertTrue(state.canAccessOffline)
+        assertEquals(500.0, state.defaultLaborCost, 0.01)
 
         // Test updating registration details
         bindingManager.updateRegistration(
@@ -90,6 +92,22 @@ class ExampleRobolectricTest {
         assertEquals("মেসার্স সততা চালের আরত", updatedState.shopName)
         assertEquals("হাজী মো: ইউনুস", updatedState.proprietorName)
         assertEquals("01812-998877", updatedState.phone)
+        assertEquals(500.0, updatedState.defaultLaborCost, 0.01)
+
+        bindingManager.updateRegistration(
+            shopName = "মেসার্স সততা চালের আরত",
+            proprietorName = "হাজী মো: ইউনুস",
+            phone = "01812-998877",
+            googleAccount = "ahsanulhouqe321@gmail.com",
+            defaultLaborCost = 800.0
+        )
+        assertEquals(800.0, bindingManager.bindingState.value.defaultLaborCost, 0.01)
+        assertFalse(bindingManager.bindingState.value.isActivated)
+
+        bindingManager.setLicenseStatus("approved")
+        assertTrue(bindingManager.bindingState.value.isActivated)
+        bindingManager.setLicenseStatus("revoked")
+        assertFalse(bindingManager.bindingState.value.isActivated)
     }
 
     // Step 2 Testing: Product & Mon Conversion
@@ -300,5 +318,58 @@ class ExampleRobolectricTest {
         )
         // Total = 50000 + 20000 + 4000 + 3000 + 1000 + 500 + 500 = 79,000 TK
         assertEquals(79000.0, denom.totalPhysicalCash, 0.01)
+    }
+
+    @Test
+    fun `test opening stock records optional miller without a bill and delete keeps chalans`() = runBlocking {
+        val millerId = repository.insertParty(
+            PartyEntity(name = "সততা রাইস মিল", phone = "01700000000", type = "SUPPLIER", balance = 0.0)
+        )
+        val prodId = repository.insertProduct(
+            ProductEntity(name = "কাটারিভোগ", currentBags = 40, defaultSaleRate = 4000.0),
+            supplierId = millerId,
+            supplierName = "সততা রাইস মিল"
+        )
+
+        val miller = repository.allParties.first().first { it.id == millerId }
+        assertEquals(0.0, miller.balance, 0.01)
+        assertTrue(repository.allPayments.first().isEmpty())
+
+        val opening = repository.allStockLogs.first().first { it.productId == prodId && it.reason == "শুরুর স্টক" }
+        assertEquals(40, opening.changeBags)
+        assertEquals("সততা রাইস মিল", opening.supplierName)
+        assertEquals(millerId, opening.supplierId)
+
+        repository.adjustStock(
+            productId = prodId,
+            productName = "কাটারিভোগ",
+            deltaBags = 10,
+            reason = "হাতে গোডাউন ইন",
+            supplierId = millerId,
+            supplierName = "সততা রাইস মিল"
+        )
+        assertEquals(0.0, repository.allParties.first().first { it.id == millerId }.balance, 0.01)
+
+        val txId = repository.executeTransaction(
+            TransactionEntity(
+                type = "SALE",
+                tradeType = "OWN_STOCK",
+                productId = prodId,
+                productName = "কাটারিভোগ",
+                bagCount = 5,
+                bagSizeKg = 50,
+                ratePerBag = 4000.0,
+                totalAmount = 20000.0,
+                paidAmount = 0.0,
+                dueAmount = 20000.0,
+                paymentMethod = "CASH"
+            )
+        )
+        assertTrue(txId != null)
+
+        repository.deleteProduct(prodId)
+        assertFalse(repository.allProducts.first().any { it.id == prodId })
+        assertFalse(repository.allStockLogs.first().any { it.productId == prodId })
+        assertTrue(repository.allTransactions.first().any { it.id == txId && it.productName == "কাটারিভোগ" })
     }
 }
