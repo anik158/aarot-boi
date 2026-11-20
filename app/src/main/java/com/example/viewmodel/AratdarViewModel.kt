@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -68,6 +69,11 @@ class AratdarViewModel(application: Application) : AndroidViewModel(application)
     init {
         val db = AratdarDatabase.getInstance(application)
         repository = AratdarRepository(db)
+        if (!deviceBindingManager.isSampleLedgerCleared()) {
+            runBlocking(Dispatchers.IO) { repository.clearLedger() }
+            deviceBindingManager.markSampleLedgerCleared()
+            deviceBindingManager.saveCashCounts(IntArray(7))
+        }
         val savedCount = deviceBindingManager.loadCashCounts()
         _denomination.value = CashDenomination(
             count1000 = savedCount[0],

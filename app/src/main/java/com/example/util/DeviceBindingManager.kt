@@ -106,4 +106,10 @@ class DeviceBindingManager(context: Context) {
         prefs.edit().putString("license_status", status).apply()
         _bindingState.value = loadState()
     }
+
+    fun isSampleLedgerCleared(): Boolean = prefs.getBoolean("sample_ledger_cleared", false)
+
+    fun markSampleLedgerCleared() {
+        prefs.edit().putBoolean("sample_ledger_cleared", true).apply()
+    }
 }

@@ -372,4 +372,15 @@ class ExampleRobolectricTest {
         assertFalse(repository.allStockLogs.first().any { it.productId == prodId })
         assertTrue(repository.allTransactions.first().any { it.id == txId && it.productName == "কাটারিভোগ" })
     }
+
+    @Test
+    fun `test clearLedger removes rice parties chalans and cash`() = runBlocking {
+        repository.insertProduct(ProductEntity(name = "মিনিকেট", currentBags = 10))
+        repository.insertParty(PartyEntity(name = "ভাই ভাই", phone = "01711"))
+        repository.clearLedger()
+        assertTrue(repository.allProducts.first().isEmpty())
+        assertTrue(repository.allParties.first().isEmpty())
+        assertTrue(repository.allTransactions.first().isEmpty())
+        assertTrue(repository.allPayments.first().isEmpty())
+    }
 }

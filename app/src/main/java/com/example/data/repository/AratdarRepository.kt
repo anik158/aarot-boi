@@ -222,4 +222,9 @@ class AratdarRepository(private val database: AratdarDatabase) {
             payId
         }
     }
+
+    /** Removes the sample shop that older installs saved on first open. */
+    suspend fun clearLedger() = withContext(Dispatchers.IO) {
+        database.clearAllTables()
+    }
 }
