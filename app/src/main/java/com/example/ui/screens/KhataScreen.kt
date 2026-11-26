@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,6 +31,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.theme.AppSize
+import com.example.ui.theme.AppText
 import com.example.ui.theme.LocalNanoColors
 import com.example.viewmodel.AratdarViewModel
 
@@ -71,13 +74,13 @@ fun KhataScreen(
                     label = {
                         Text(
                             text = "মাল খাতা (চাল স্টক)",
-                            fontSize = 13.sp,
+                            fontSize = AppText.Body,
                             fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Medium
                         )
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .height(44.dp)
+                        .heightIn(min = AppSize.ButtonSm)
                         .testTag("tab_mal_khata"),
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = colors.primary,
@@ -95,13 +98,13 @@ fun KhataScreen(
                     label = {
                         Text(
                             text = "ক্যাশ খাতা ও রোকার",
-                            fontSize = 13.sp,
+                            fontSize = AppText.Body,
                             fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Medium
                         )
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .height(44.dp)
+                        .heightIn(min = AppSize.ButtonSm)
                         .testTag("tab_cash_khata"),
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = colors.primary,

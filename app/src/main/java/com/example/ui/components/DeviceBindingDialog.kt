@@ -50,6 +50,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.ui.theme.AppIcon
+import com.example.ui.theme.AppSize
+import com.example.ui.theme.AppText
 import com.example.ui.theme.LocalNanoColors
 import com.example.util.BanglaNumberUtils
 import com.example.util.DeviceBindingState
@@ -94,7 +97,7 @@ fun DeviceBindingDialog(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
-                                .size(38.dp)
+                                .size(AppIcon.Badge)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(colors.primaryContainer),
                             contentAlignment = Alignment.Center
@@ -103,25 +106,25 @@ fun DeviceBindingDialog(
                                 imageVector = Icons.Default.PhonelinkLock,
                                 contentDescription = null,
                                 tint = colors.primary,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(AppIcon.Md)
                             )
                         }
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
                                 text = "ডিভাইস বাইন্ডিং ও লাইসেন্স",
-                                fontSize = 16.sp,
+                                fontSize = AppText.Title,
                                 fontWeight = FontWeight.Bold,
                                 color = colors.textPrimary
                             )
                             Text(
                                 text = "নিরাপদ অফলাইন আড়ত সিস্টেম",
-                                fontSize = 11.sp,
+                                fontSize = AppText.Caption,
                                 color = colors.textSecondary
                             )
                         }
                     }
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(AppSize.ButtonSm)) {
                         Icon(Icons.Default.Close, contentDescription = "বন্ধ", tint = colors.textMuted)
                     }
                 }
@@ -143,11 +146,11 @@ fun DeviceBindingDialog(
                     ) {
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = colors.badgeSuccessText, modifier = Modifier.size(13.dp))
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = colors.badgeSuccessText, modifier = Modifier.size(AppIcon.Xs))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("লাইসেন্স স্ট্যাটাস", fontSize = 10.sp, color = colors.textMuted)
+                                Text("লাইসেন্স স্ট্যাটাস", fontSize = AppText.Tiny, color = colors.textMuted)
                             }
-                            Text(bindingState.licenseStatus, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = colors.badgeSuccessText)
+                            Text(bindingState.licenseStatus, fontSize = AppText.Caption, fontWeight = FontWeight.Bold, color = colors.badgeSuccessText)
                         }
                     }
 
@@ -163,9 +166,9 @@ fun DeviceBindingDialog(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(colors.badgeOrangeText))
                                 Spacer(modifier = Modifier.width(5.dp))
-                                Text("অফলাইন বাফার", fontSize = 10.sp, color = colors.textMuted)
+                                Text("অফলাইন বাফার", fontSize = AppText.Tiny, color = colors.textMuted)
                             }
-                            Text("${BanglaNumberUtils.toBanglaDigits(bindingState.graceDaysRemaining)} দিন গ্রেস পিরিয়ড", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = colors.badgeOrangeText)
+                            Text("${BanglaNumberUtils.toBanglaDigits(bindingState.graceDaysRemaining)} দিন গ্রেস পিরিয়ড", fontSize = AppText.Caption, fontWeight = FontWeight.Bold, color = colors.badgeOrangeText)
                         }
                     }
                 }
@@ -183,32 +186,32 @@ fun DeviceBindingDialog(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("হার্ডওয়্যার আইডি:", fontSize = 12.sp, color = colors.textMuted)
-                            Text(bindingState.deviceId, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = colors.primary)
+                            Text("হার্ডওয়্যার আইডি:", fontSize = AppText.Small, color = colors.textMuted)
+                            Text(bindingState.deviceId, fontSize = AppText.Small, fontWeight = FontWeight.SemiBold, color = colors.primary)
                         }
                         HorizontalDivider(color = colors.borderSubtle)
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("গুগল অ্যাকাউন্ট:", fontSize = 12.sp, color = colors.textMuted)
-                            Text(bindingState.googleAccount, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = colors.textPrimary)
+                            Text("গুগল অ্যাকাউন্ট:", fontSize = AppText.Small, color = colors.textMuted)
+                            Text(bindingState.googleAccount, fontSize = AppText.Small, fontWeight = FontWeight.Medium, color = colors.textPrimary)
                         }
                         HorizontalDivider(color = colors.borderSubtle)
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("অফলাইন এক্সেস:", fontSize = 12.sp, color = colors.textMuted)
-                            Text("নিরাপদ ও সক্রিয়", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = colors.badgeSuccessText)
+                            Text("অফলাইন এক্সেস:", fontSize = AppText.Small, color = colors.textMuted)
+                            Text("নিরাপদ ও সক্রিয়", fontSize = AppText.Small, fontWeight = FontWeight.Bold, color = colors.badgeSuccessText)
                         }
                         HorizontalDivider(color = colors.borderSubtle)
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("ডিফল্ট খালাসি:", fontSize = 12.sp, color = colors.textMuted)
+                            Text("ডিফল্ট খালাসি:", fontSize = AppText.Small, color = colors.textMuted)
                             Text(
                                 BanglaNumberUtils.formatCurrency(bindingState.defaultLaborCost),
-                                fontSize = 12.sp,
+                                fontSize = AppText.Small,
                                 fontWeight = FontWeight.Bold,
                                 color = colors.textPrimary
                             )
                         }
                         Text(
                             text = "এক কমিশন চালানের মোট। বস্তাপ্রতি নয়।",
-                            fontSize = 11.sp,
+                            fontSize = AppText.Caption,
                             color = colors.textMuted
                         )
                     }
@@ -264,7 +267,7 @@ fun DeviceBindingDialog(
                         onValueChange = { laborCostStr = it },
                         label = { Text("ডিফল্ট খালাসি খরচ", color = colors.textMuted) },
                         supportingText = {
-                            Text("এক কমিশন চালানের মোট। বস্তাপ্রতি নয়।", color = colors.textMuted, fontSize = 11.sp)
+                            Text("এক কমিশন চালানের মোট। বস্তাপ্রতি নয়।", color = colors.textMuted, fontSize = AppText.Caption)
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier

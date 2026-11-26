@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.local.entity.PartyEntity
+import com.example.ui.theme.AppText
 import com.example.ui.theme.LocalNanoColors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -84,7 +85,7 @@ fun OptionalMillerField(
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "খালি রাখলে শুধু বস্তা যোগ হবে। মিলারের বাকি ও ক্যাশ বদলাবে না।",
-            fontSize = 11.sp,
+            fontSize = AppText.Caption,
             color = colors.textMuted
         )
     }

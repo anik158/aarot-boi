@@ -31,13 +31,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
-import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AssignmentLate
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -65,16 +61,24 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.R
 import com.example.data.local.entity.TransactionEntity
 import com.example.ui.components.ChalanMemoDialog
 import com.example.ui.components.DeviceBindingDialog
+import com.example.ui.theme.AppIcon
+import com.example.ui.theme.AppSize
+import com.example.ui.theme.AppText
 import com.example.ui.theme.LocalNanoColors
 import com.example.util.AppCredits
 import com.example.util.BanglaNumberUtils
@@ -104,10 +108,10 @@ fun DashboardScreen(
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val isNarrow = maxWidth < 380.dp
-        val headerTitleSize = if (isNarrow) 16.sp else 18.sp
-        val metricTitleSize = if (isNarrow) 13.sp else 14.sp
-        val metricValueSize = if (isNarrow) 20.sp else 22.sp
-        val metricCardHeight = if (isNarrow) 132.dp else 140.dp
+        val headerTitleSize = if (isNarrow) AppText.Title else AppText.TitleLg
+        val metricTitleSize = if (isNarrow) AppText.Body else AppText.BodyLg
+        val metricValueSize = if (isNarrow) AppText.Heading else AppText.Value
+        val illustrationSize = if (isNarrow) AppIcon.IllustrationNarrow else AppIcon.Illustration
 
         val last7DaySales = remember(transactions) { buildLast7DaySales(transactions) }
 
@@ -156,7 +160,7 @@ fun DashboardScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(40.dp)
+                                    .size(AppIcon.BadgeLg)
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(colors.primaryContainer)
                                     .border(1.dp, colors.primary.copy(alpha = 0.4f), RoundedCornerShape(12.dp)),
@@ -166,7 +170,7 @@ fun DashboardScreen(
                                     imageVector = Icons.Default.Store,
                                     contentDescription = null,
                                     tint = colors.primary,
-                                    modifier = Modifier.size(22.dp)
+                                    modifier = Modifier.size(AppIcon.Md)
                                 )
                             }
                             Spacer(modifier = Modifier.width(10.dp))
@@ -180,7 +184,7 @@ fun DashboardScreen(
                                 )
                                 Text(
                                     text = "ডিজিটাল পাইকারি স্টক ও ৪-ইন-১ খাতা",
-                                    fontSize = 11.sp,
+                                    fontSize = AppText.Caption,
                                     color = colors.headerSubtext,
                                     maxLines = 1
                                 )
@@ -208,7 +212,7 @@ fun DashboardScreen(
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "সক্রিয়",
-                                    fontSize = 11.sp,
+                                    fontSize = AppText.Caption,
                                     fontWeight = FontWeight.SemiBold,
                                     color = colors.badgeSuccessText
                                 )
@@ -220,8 +224,8 @@ fun DashboardScreen(
             floatingActionButton = {
                 ExtendedFloatingActionButton(
                     onClick = onNavigateToChalan,
-                    icon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp), tint = colors.onPrimary) },
-                    text = { Text("নতুন চালান", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = colors.onPrimary) },
+                    icon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(AppIcon.Md), tint = colors.onPrimary) },
+                    text = { Text("নতুন চালান", fontWeight = FontWeight.Bold, fontSize = AppText.BodyLg, color = colors.onPrimary) },
                     containerColor = colors.primary.copy(alpha = fabAlpha),
                     contentColor = colors.onPrimary,
                     shape = RoundedCornerShape(16.dp),
@@ -241,7 +245,7 @@ fun DashboardScreen(
                 item {
                     Text(
                         text = "ব্যবসার সারসংক্ষেপ",
-                        fontSize = 20.sp,
+                        fontSize = AppText.Heading,
                         fontWeight = FontWeight.Bold,
                         color = colors.textPrimary
                     )
@@ -252,18 +256,19 @@ fun DashboardScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(metricCardHeight),
+                                .height(IntrinsicSize.Min),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             CyberMetricCard(
                                 title = "মোট মজুদ চাল",
                                 value = "${BanglaNumberUtils.toBanglaDigits(metrics.totalStockBags)} বস্তা",
                                 subtext = "~${BanglaNumberUtils.toBanglaDigits(metrics.totalStockMon.toInt())} মণ",
-                                icon = Icons.Default.Inventory2,
+                                illustration = R.drawable.ill_rice_sacks,
                                 badgeColor = colors.badgeSuccessBg,
                                 accentColor = colors.badgeSuccessText,
                                 titleSize = metricTitleSize,
                                 valueSize = metricValueSize,
+                                illustrationSize = illustrationSize,
                                 modifier = Modifier
                                     .weight(1f)
                                     .fillMaxHeight()
@@ -274,11 +279,12 @@ fun DashboardScreen(
                                 title = "আজকের মোট বিক্রি",
                                 value = BanglaNumberUtils.formatCurrency(metrics.todaySalesAmount),
                                 subtext = "${BanglaNumberUtils.toBanglaDigits(metrics.todaySalesBags)} বস্তা • ট্যাপ করে গ্রাফ",
-                                icon = Icons.AutoMirrored.Filled.TrendingUp,
+                                illustration = R.drawable.ill_rice_sale,
                                 badgeColor = colors.primaryContainer,
                                 accentColor = colors.primary,
                                 titleSize = metricTitleSize,
                                 valueSize = metricValueSize,
+                                illustrationSize = illustrationSize,
                                 modifier = Modifier
                                     .weight(1f)
                                     .fillMaxHeight()
@@ -289,18 +295,20 @@ fun DashboardScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(metricCardHeight),
+                                .height(IntrinsicSize.Min),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             CyberMetricCard(
                                 title = "বাজারে মোট বাকি",
                                 value = BanglaNumberUtils.formatCurrency(metrics.totalCustomerDue),
                                 subtext = "দেনাদারদের কাছে পাওনা",
-                                icon = Icons.Default.AssignmentLate,
+                                illustration = R.drawable.ill_khata_book,
+                                showAlert = metrics.totalCustomerDue > 0,
                                 badgeColor = colors.badgeDangerBg,
                                 accentColor = colors.badgeDangerText,
                                 titleSize = metricTitleSize,
                                 valueSize = metricValueSize,
+                                illustrationSize = illustrationSize,
                                 modifier = Modifier
                                     .weight(1f)
                                     .fillMaxHeight()
@@ -311,11 +319,12 @@ fun DashboardScreen(
                                 title = "ক্যাশ বাক্সে নগদ",
                                 value = BanglaNumberUtils.formatCurrency(metrics.cashInHand),
                                 subtext = "হাতে থাকা ক্যাশ স্থিতি",
-                                icon = Icons.Default.AccountBalanceWallet,
+                                illustration = R.drawable.ill_cash_box,
                                 badgeColor = colors.badgeAmberBg,
                                 accentColor = colors.badgeAmberText,
                                 titleSize = metricTitleSize,
                                 valueSize = metricValueSize,
+                                illustrationSize = illustrationSize,
                                 modifier = Modifier
                                     .weight(1f)
                                     .fillMaxHeight()
@@ -334,13 +343,13 @@ fun DashboardScreen(
                     ) {
                         Text(
                             text = "সাম্প্রতিক চালান",
-                            fontSize = 14.sp,
+                            fontSize = AppText.BodyLg,
                             fontWeight = FontWeight.SemiBold,
                             color = colors.textMuted
                         )
                         Text(
                             text = "${BanglaNumberUtils.toBanglaDigits(transactions.size)} টি",
-                            fontSize = 12.sp,
+                            fontSize = AppText.Small,
                             color = colors.textMuted
                         )
                     }
@@ -367,19 +376,19 @@ fun DashboardScreen(
                                     imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
                                     contentDescription = null,
                                     tint = colors.textMuted,
-                                    modifier = Modifier.size(36.dp)
+                                    modifier = Modifier.size(AppIcon.Badge)
                                 )
                                 Spacer(modifier = Modifier.height(10.dp))
                                 Text(
                                     text = "এখনো কোনো চালান তৈরি করা হয়নি",
                                     fontWeight = FontWeight.Medium,
-                                    fontSize = 14.sp,
+                                    fontSize = AppText.BodyLg,
                                     color = colors.textSecondary
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = "নিচের 'নতুন চালান' বাটনে চাপ দিয়ে এন্ট্রি শুরু করুন",
-                                    fontSize = 12.sp,
+                                    fontSize = AppText.Small,
                                     color = colors.textMuted
                                 )
                             }
@@ -402,7 +411,7 @@ fun DashboardScreen(
                             .fillMaxWidth()
                             .padding(top = 8.dp, bottom = 72.dp),
                         textAlign = TextAlign.Center,
-                        fontSize = 11.sp,
+                        fontSize = AppText.Caption,
                         color = colors.textMuted
                     )
                 }
@@ -447,13 +456,13 @@ fun DashboardScreen(
                                 Text(
                                     text = "আজকের বিক্রি",
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 18.sp,
+                                    fontSize = AppText.TitleLg,
                                     color = colors.textPrimary
                                 )
                                 Text(
                                     text = BanglaNumberUtils.formatCurrency(metrics.todaySalesAmount),
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 22.sp,
+                                    fontSize = AppText.Value,
                                     color = colors.primary
                                 )
                             }
@@ -464,14 +473,14 @@ fun DashboardScreen(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "${BanglaNumberUtils.toBanglaDigits(metrics.todaySalesBags)} বস্তা বিক্রি হয়েছে",
-                            fontSize = 13.sp,
+                            fontSize = AppText.Body,
                             color = colors.textSecondary
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "গত ৭ দিনের বিক্রি",
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
+                            fontSize = AppText.BodyLg,
                             color = colors.textPrimary
                         )
                         Spacer(modifier = Modifier.height(10.dp))
@@ -488,7 +497,7 @@ fun DashboardScreen(
                             onClick = { showSalesChartDialog = false },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(48.dp),
+                                .heightIn(min = AppSize.Button),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = colors.primary,
@@ -528,11 +537,13 @@ fun CyberMetricCard(
     title: String,
     value: String,
     subtext: String,
-    icon: ImageVector,
+    @DrawableRes illustration: Int,
     badgeColor: Color,
     accentColor: Color,
-    titleSize: androidx.compose.ui.unit.TextUnit = 12.sp,
-    valueSize: androidx.compose.ui.unit.TextUnit = 17.sp,
+    titleSize: androidx.compose.ui.unit.TextUnit = AppText.BodyLg,
+    valueSize: androidx.compose.ui.unit.TextUnit = AppText.Value,
+    illustrationSize: androidx.compose.ui.unit.Dp = AppIcon.Illustration,
+    showAlert: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalNanoColors.current
@@ -540,57 +551,73 @@ fun CyberMetricCard(
     Card(
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = colors.surface),
-        modifier = modifier.border(1.dp, colors.border, RoundedCornerShape(18.dp))
+        modifier = modifier
+            .heightIn(min = 196.dp)
+            .border(1.dp, accentColor.copy(alpha = 0.35f), RoundedCornerShape(18.dp))
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp, vertical = 14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = title,
                     fontSize = titleSize,
                     color = colors.textSecondary,
                     fontWeight = FontWeight.SemiBold,
-                    maxLines = 1
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Box(
                     modifier = Modifier
-                        .size(34.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(badgeColor)
-                        .border(1.dp, accentColor.copy(alpha = 0.3f), RoundedCornerShape(10.dp)),
+                        .padding(vertical = 6.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(badgeColor.copy(alpha = 0.55f))
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = icon,
+                    Image(
+                        painter = painterResource(illustration),
                         contentDescription = null,
-                        tint = accentColor,
-                        modifier = Modifier.size(17.dp)
+                        modifier = Modifier.size(illustrationSize)
+                    )
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = value,
+                        fontSize = valueSize,
+                        fontWeight = FontWeight.Bold,
+                        color = accentColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = subtext,
+                        fontSize = AppText.Caption,
+                        color = colors.textMuted,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
-            Column {
-                Text(
-                    text = value,
-                    fontSize = valueSize,
-                    fontWeight = FontWeight.Bold,
-                    color = colors.textPrimary,
-                    maxLines = 1
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = subtext,
-                    fontSize = 12.sp,
-                    color = colors.textMuted,
-                    maxLines = 1
-                )
+            if (showAlert) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .size(26.dp)
+                        .clip(CircleShape)
+                        .background(colors.badgeDangerText),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("!", fontSize = AppText.Label, fontWeight = FontWeight.Bold, color = colors.onPrimary)
+                }
             }
         }
     }
@@ -686,7 +713,7 @@ fun CyberTransactionItemCard(
                                 isSale -> "নিজস্ব বিক্রি"
                                 else -> "ক্রয় চালান"
                             },
-                            fontSize = 10.sp,
+                            fontSize = AppText.Tiny,
                             fontWeight = FontWeight.Bold,
                             color = when {
                                 isConsignment -> colors.badgeBlueText
@@ -699,7 +726,7 @@ fun CyberTransactionItemCard(
                     Text(
                         text = if (isSale) transaction.customerName.ifEmpty { "নগদ খরিদ্দার" } else transaction.supplierName,
                         fontWeight = FontWeight.Bold,
-                        fontSize = if (isNarrow) 13.sp else 14.sp,
+                        fontSize = if (isNarrow) AppText.Body else AppText.BodyLg,
                         color = colors.textPrimary,
                         maxLines = 1
                     )
@@ -708,7 +735,7 @@ fun CyberTransactionItemCard(
                 Text(
                     text = BanglaNumberUtils.formatCurrency(transaction.totalAmount),
                     fontWeight = FontWeight.Bold,
-                    fontSize = if (isNarrow) 14.sp else 15.sp,
+                    fontSize = if (isNarrow) AppText.BodyLg else AppText.Label,
                     color = colors.textPrimary
                 )
             }
@@ -722,12 +749,12 @@ fun CyberTransactionItemCard(
             ) {
                 Text(
                     text = "${transaction.productName} • ${BanglaNumberUtils.toBanglaDigits(transaction.bagCount)} বস্তা (${BanglaNumberUtils.formatCurrency(transaction.ratePerBag)}/বস্তা)",
-                    fontSize = if (isNarrow) 11.sp else 12.sp,
+                    fontSize = if (isNarrow) AppText.Caption else AppText.Small,
                     color = colors.textSecondary
                 )
                 Text(
                     text = dateFormatted,
-                    fontSize = 10.sp,
+                    fontSize = AppText.Tiny,
                     color = colors.textMuted
                 )
             }
@@ -744,7 +771,7 @@ fun CyberTransactionItemCard(
                 if (transaction.dueAmount > 0) {
                     Text(
                         text = "বকেয়া: ${BanglaNumberUtils.formatCurrency(transaction.dueAmount)}",
-                        fontSize = 11.sp,
+                        fontSize = AppText.Caption,
                         fontWeight = FontWeight.SemiBold,
                         color = colors.badgeDangerText
                     )
@@ -754,12 +781,12 @@ fun CyberTransactionItemCard(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
                             tint = colors.badgeSuccessText,
-                            modifier = Modifier.size(13.dp)
+                            modifier = Modifier.size(AppIcon.Xs)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "সম্পূর্ণ পরিশোধিত",
-                            fontSize = 11.sp,
+                            fontSize = AppText.Caption,
                             fontWeight = FontWeight.Medium,
                             color = colors.badgeSuccessText
                         )
@@ -769,7 +796,7 @@ fun CyberTransactionItemCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "মেমো দেখুন",
-                        fontSize = 11.sp,
+                        fontSize = AppText.Caption,
                         fontWeight = FontWeight.Medium,
                         color = colors.primary
                     )
@@ -778,7 +805,7 @@ fun CyberTransactionItemCard(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
                         tint = colors.primary,
-                        modifier = Modifier.size(12.dp)
+                        modifier = Modifier.size(AppIcon.Xs)
                     )
                 }
             }

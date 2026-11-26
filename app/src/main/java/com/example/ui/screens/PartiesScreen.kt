@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -65,6 +66,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.data.local.entity.PartyEntity
 import com.example.data.local.entity.PaymentEntity
+import com.example.ui.theme.AppIcon
+import com.example.ui.theme.AppSize
+import com.example.ui.theme.AppText
 import com.example.ui.theme.LocalNanoColors
 import com.example.util.BanglaNumberUtils
 import com.example.viewmodel.AratdarViewModel
@@ -135,12 +139,12 @@ fun PartiesScreen(
                         Text(
                             text = "দেনা-পাওনা খাতা",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
+                            fontSize = AppText.TitleLg,
                             color = colors.headerText
                         )
                         Text(
                             text = "বাকি পাওনা: ${BanglaNumberUtils.formatCurrency(totalCustomerDue)} • মিলার পাবে: ${BanglaNumberUtils.formatCurrency(totalMillerPayable)}",
-                            fontSize = 11.sp,
+                            fontSize = AppText.Caption,
                             color = colors.headerSubtext
                         )
                     }
@@ -154,9 +158,9 @@ fun PartiesScreen(
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.testTag("add_party_action")
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(AppIcon.Sm))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("নতুন পার্টি", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("নতুন পার্টি", fontSize = AppText.Small, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -205,7 +209,7 @@ fun PartiesScreen(
                     FilterChip(
                         selected = isSelected,
                         onClick = { selectedTab = tabKey },
-                        label = { Text(title, fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
+                        label = { Text(title, fontSize = AppText.Caption, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = colors.navPillActive,
                             selectedLabelColor = colors.primary,
@@ -268,10 +272,10 @@ fun PartiesScreen(
                         Text(
                             text = if (isReceiving) "বকেয়া আদায়: ${party.name}" else "মিলারকে পরিশোধ: ${party.name}",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
+                            fontSize = AppText.Title,
                             color = colors.textPrimary
                         )
-                        IconButton(onClick = { paymentTargetParty = null }, modifier = Modifier.size(28.dp)) {
+                        IconButton(onClick = { paymentTargetParty = null }, modifier = Modifier.size(AppSize.ButtonSm)) {
                             Icon(Icons.Default.Close, contentDescription = "বন্ধ", tint = colors.textMuted)
                         }
                     }
@@ -279,7 +283,7 @@ fun PartiesScreen(
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = if (isReceiving) "বর্তমান বকেয়া: ${BanglaNumberUtils.formatCurrency(party.balance)}" else "মিলার মোট পাবে: ${BanglaNumberUtils.formatCurrency(abs(party.balance))}",
-                        fontSize = 12.sp,
+                        fontSize = AppText.Small,
                         fontWeight = FontWeight.SemiBold,
                         color = if (isReceiving) colors.badgeDangerText else colors.badgeOrangeText
                     )
@@ -313,7 +317,7 @@ fun PartiesScreen(
                             FilterChip(
                                 selected = payMethod == method,
                                 onClick = { payMethod = method },
-                                label = { Text(label, fontSize = 11.sp) },
+                                label = { Text(label, fontSize = AppText.Caption) },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = colors.primaryContainer,
                                     selectedLabelColor = colors.primary
@@ -379,7 +383,7 @@ fun PartiesScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp)
+                            .heightIn(min = AppSize.Button)
                             .testTag("confirm_payment_button"),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary)
@@ -414,10 +418,10 @@ fun PartiesScreen(
                         Text(
                             text = "নতুন পার্টি তৈরি",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
+                            fontSize = AppText.Title,
                             color = colors.textPrimary
                         )
-                        IconButton(onClick = { showAddPartyDialog = false }, modifier = Modifier.size(28.dp)) {
+                        IconButton(onClick = { showAddPartyDialog = false }, modifier = Modifier.size(AppSize.ButtonSm)) {
                             Icon(Icons.Default.Close, contentDescription = "বন্ধ", tint = colors.textMuted)
                         }
                     }
@@ -520,7 +524,7 @@ fun PartiesScreen(
                         )
                         Text(
                             text = "এত টাকার বেশি বাকি হলে সতর্কবার্তা দেখাবে।",
-                            fontSize = 11.sp,
+                            fontSize = AppText.Caption,
                             color = colors.textMuted,
                             modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
                         )
@@ -541,7 +545,7 @@ fun PartiesScreen(
                         )
                         Text(
                             text = "ক্রেতাকে খালি চটের বস্তা দিলে এখানে লিখুন।",
-                            fontSize = 11.sp,
+                            fontSize = AppText.Caption,
                             color = colors.textMuted,
                             modifier = Modifier.padding(top = 4.dp)
                         )
@@ -571,7 +575,7 @@ fun PartiesScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp)
+                            .heightIn(min = AppSize.Button)
                             .testTag("confirm_add_party_button"),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary)
@@ -625,7 +629,7 @@ fun CyberPartyCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(AppIcon.Badge)
                             .clip(RoundedCornerShape(10.dp))
                             .background(if (isDue) colors.badgeDangerBg else colors.primaryContainer)
                             .border(1.dp, if (isDue) colors.badgeDangerText.copy(alpha = 0.3f) else colors.primary.copy(alpha = 0.3f), RoundedCornerShape(10.dp)),
@@ -635,7 +639,7 @@ fun CyberPartyCard(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
                             tint = if (isDue) colors.badgeDangerText else colors.primary,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(AppIcon.Md)
                         )
                     }
                     Spacer(modifier = Modifier.width(10.dp))
@@ -643,12 +647,12 @@ fun CyberPartyCard(
                         Text(
                             text = party.name,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
+                            fontSize = AppText.Label,
                             color = colors.textPrimary
                         )
                         Text(
                             text = "${if (party.type == "CUSTOMER") "খরিদ্দার" else "মিলার"} • ${party.phone}",
-                            fontSize = 11.sp,
+                            fontSize = AppText.Caption,
                             color = colors.textMuted
                         )
                     }
@@ -663,7 +667,7 @@ fun CyberPartyCard(
                             else -> "পরিশোধিত"
                         },
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
+                        fontSize = AppText.Label,
                         color = when {
                             isDue -> colors.badgeDangerText
                             isPayable -> colors.badgeOrangeText
@@ -676,7 +680,7 @@ fun CyberPartyCard(
                             isPayable -> "মিলার পাবে"
                             else -> "ব্যালেন্স শূন্য"
                         },
-                        fontSize = 10.sp,
+                        fontSize = AppText.Tiny,
                         color = colors.textMuted
                     )
                 }
@@ -696,7 +700,7 @@ fun CyberPartyCard(
                                 .background(colors.surfaceElevated)
                                 .padding(horizontal = 8.dp, vertical = 3.dp)
                         ) {
-                            Text("লিমিট: ${BanglaNumberUtils.formatCurrency(party.creditLimit)}", fontSize = 10.sp, color = colors.textSecondary)
+                            Text("লিমিট: ${BanglaNumberUtils.formatCurrency(party.creditLimit)}", fontSize = AppText.Tiny, color = colors.textSecondary)
                         }
                     }
                     if (party.emptyBagsDue > 0) {
@@ -706,7 +710,7 @@ fun CyberPartyCard(
                                 .background(colors.badgeAmberBg)
                                 .padding(horizontal = 8.dp, vertical = 3.dp)
                         ) {
-                            Text("খালি বস্তা পাওনা: ${BanglaNumberUtils.toBanglaDigits(party.emptyBagsDue)} টি", fontSize = 10.sp, color = colors.badgeAmberText)
+                            Text("খালি বস্তা পাওনা: ${BanglaNumberUtils.toBanglaDigits(party.emptyBagsDue)} টি", fontSize = AppText.Tiny, color = colors.badgeAmberText)
                         }
                     }
                 }
@@ -723,35 +727,35 @@ fun CyberPartyCard(
             ) {
                 Button(
                     onClick = { makeCall(party.phone) },
-                    modifier = Modifier.weight(1f).height(38.dp),
+                    modifier = Modifier.weight(1f).heightIn(min = AppSize.ButtonSm),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = colors.surfaceElevated, contentColor = colors.textPrimary)
                 ) {
-                    Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(AppIcon.Xs))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("কল", fontSize = 12.sp)
+                    Text("কল", fontSize = AppText.Small)
                 }
 
                 if (isDue) {
                     Button(
                         onClick = { sendWhatsAppReminder(party) },
-                        modifier = Modifier.weight(1.2f).height(38.dp),
+                        modifier = Modifier.weight(1.2f).heightIn(min = AppSize.ButtonSm),
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = colors.badgeSuccessBg, contentColor = colors.badgeSuccessText)
                     ) {
-                        Text("WhatsApp তাগাদা", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        Text("WhatsApp তাগাদা", fontSize = AppText.Caption, fontWeight = FontWeight.SemiBold)
                     }
                 }
 
                 Button(
                     onClick = onReceivePaymentClick,
-                    modifier = Modifier.weight(1.3f).height(38.dp),
+                    modifier = Modifier.weight(1.3f).heightIn(min = AppSize.ButtonSm),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary)
                 ) {
-                    Icon(Icons.Default.Payments, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Default.Payments, contentDescription = null, modifier = Modifier.size(AppIcon.Xs))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(if (isDue) "বাকি আদায়" else "টাকা দিন", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text(if (isDue) "বাকি আদায়" else "টাকা দিন", fontSize = AppText.Caption, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -785,13 +789,13 @@ private fun PartyTypeChoiceCard(
         Text(
             text = title,
             fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
+            fontSize = AppText.BodyLg,
             color = if (selected) selectedText else colors.textPrimary
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = subtitle,
-            fontSize = 11.sp,
+            fontSize = AppText.Caption,
             color = if (selected) selectedText.copy(alpha = 0.9f) else colors.textMuted
         )
     }

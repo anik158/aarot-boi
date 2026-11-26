@@ -64,6 +64,9 @@ import androidx.compose.ui.window.Dialog
 import com.example.data.local.entity.PartyEntity
 import com.example.data.local.entity.ProductEntity
 import com.example.ui.components.OptionalMillerField
+import com.example.ui.theme.AppIcon
+import com.example.ui.theme.AppSize
+import com.example.ui.theme.AppText
 import com.example.ui.theme.LocalNanoColors
 import com.example.util.BanglaNumberUtils
 import com.example.viewmodel.AratdarViewModel
@@ -127,12 +130,12 @@ fun StockScreen(
                         Text(
                             text = "মাল খাতা (গোডাউন স্টক)",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
+                            fontSize = AppText.TitleLg,
                             color = colors.headerText
                         )
                         Text(
                             text = "মোট মজুদ: ${BanglaNumberUtils.toBanglaDigits(totalBags)} বস্তা (~${BanglaNumberUtils.toBanglaDigits(totalMon.toInt())} মণ) • মূল্য: ${BanglaNumberUtils.formatCurrency(totalValue)}",
-                            fontSize = 11.sp,
+                            fontSize = AppText.Caption,
                             color = colors.headerSubtext
                         )
                     }
@@ -146,9 +149,9 @@ fun StockScreen(
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.testTag("add_product_action")
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(AppIcon.Sm))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("নতুন চাল", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("নতুন চাল", fontSize = AppText.Small, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -237,10 +240,10 @@ fun StockScreen(
                         Text(
                             text = "স্টক সমন্বয়: ${product.name}",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
+                            fontSize = AppText.Title,
                             color = colors.textPrimary
                         )
-                        IconButton(onClick = { selectedProductForAdjust = null }, modifier = Modifier.size(28.dp)) {
+                        IconButton(onClick = { selectedProductForAdjust = null }, modifier = Modifier.size(AppSize.ButtonSm)) {
                             Icon(Icons.Default.Close, contentDescription = "বন্ধ", tint = colors.textMuted)
                         }
                     }
@@ -248,7 +251,7 @@ fun StockScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "বর্তমান মজুদ: ${BanglaNumberUtils.toBanglaDigits(product.currentBags)} বস্তা (~${BanglaNumberUtils.toBanglaDigits(product.totalMon.toInt())} মণ)",
-                        fontSize = 12.sp,
+                        fontSize = AppText.Small,
                         color = colors.textMuted
                     )
 
@@ -267,7 +270,7 @@ fun StockScreen(
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(AppIcon.Sm))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("স্টক ইন (যোগ)")
                         }
@@ -281,7 +284,7 @@ fun StockScreen(
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Icon(Icons.Default.Remove, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Remove, contentDescription = null, modifier = Modifier.size(AppIcon.Sm))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("ঘাটতি / আউট")
                         }
@@ -351,7 +354,7 @@ fun StockScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp)
+                            .heightIn(min = AppSize.Button)
                             .testTag("confirm_adjust_button"),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary)
@@ -388,10 +391,10 @@ fun StockScreen(
                         Text(
                             text = "নতুন চালের জাত যোগ করুন",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
+                            fontSize = AppText.Title,
                             color = colors.textPrimary
                         )
-                        IconButton(onClick = { showAddProductDialog = false }, modifier = Modifier.size(28.dp)) {
+                        IconButton(onClick = { showAddProductDialog = false }, modifier = Modifier.size(AppSize.ButtonSm)) {
                             Icon(Icons.Default.Close, contentDescription = "বন্ধ", tint = colors.textMuted)
                         }
                     }
@@ -424,7 +427,7 @@ fun StockScreen(
                         FilterChip(
                             selected = newProdBagSize == "50",
                             onClick = { newProdBagSize = "50" },
-                            label = { Text("৫০ কেজি বস্তা (১.২৫ মণ)", fontSize = 11.sp) },
+                            label = { Text("৫০ কেজি বস্তা (১.২৫ মণ)", fontSize = AppText.Caption) },
                             modifier = Modifier.weight(1f),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = colors.primaryContainer,
@@ -434,7 +437,7 @@ fun StockScreen(
                         FilterChip(
                             selected = newProdBagSize == "25",
                             onClick = { newProdBagSize = "25" },
-                            label = { Text("২৫ কেজি বস্তা (০.৬২৫ মণ)", fontSize = 11.sp) },
+                            label = { Text("২৫ কেজি বস্তা (০.৬২৫ মণ)", fontSize = AppText.Caption) },
                             modifier = Modifier.weight(1f),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = colors.primaryContainer,
@@ -533,7 +536,7 @@ fun StockScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp)
+                            .heightIn(min = AppSize.Button)
                             .testTag("confirm_add_product_button"),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary)
@@ -559,20 +562,20 @@ fun StockScreen(
                     Text(
                         text = "চাল মুছে ফেলবেন?",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
+                        fontSize = AppText.Title,
                         color = colors.textPrimary
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
                         text = "${product.name} মাল খাতা থেকে উঠে যাবে। বাকি ${BanglaNumberUtils.toBanglaDigits(product.currentBags)} বস্তা মোট মজুদ থেকে বাদ যাবে। ক্যাশ, খরিদ্দারের বাকি এবং মিলারের পাওনা অপরিবর্তিত থাকবে।",
-                        fontSize = 13.sp,
+                        fontSize = AppText.Body,
                         color = colors.textSecondary
                     )
                     if (chalanCount > 0) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "এই চালে ${BanglaNumberUtils.toBanglaDigits(chalanCount)}টি চালান আছে। পুরনো মেমো, বাকি এবং খালাসি ক্যাশ থেকে যাবে। বিক্রি বাতিল হবে না।",
-                            fontSize = 13.sp,
+                            fontSize = AppText.Body,
                             color = colors.badgeDangerText
                         )
                     }
@@ -637,7 +640,7 @@ fun CyberProductCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(AppIcon.Badge)
                             .clip(RoundedCornerShape(10.dp))
                             .background(colors.badgeSuccessBg)
                             .border(1.dp, colors.badgeSuccessText.copy(alpha = 0.3f), RoundedCornerShape(10.dp)),
@@ -647,7 +650,7 @@ fun CyberProductCard(
                             imageVector = Icons.Default.Inventory,
                             contentDescription = null,
                             tint = colors.badgeSuccessText,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(AppIcon.Md)
                         )
                     }
                     Spacer(modifier = Modifier.width(10.dp))
@@ -655,18 +658,18 @@ fun CyberProductCard(
                         Text(
                             text = product.name,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
+                            fontSize = AppText.Label,
                             color = colors.textPrimary
                         )
                         Text(
                             text = "${product.category} • ${product.bagSizeKg} কেজি চটের ব্যাগ",
-                            fontSize = 11.sp,
+                            fontSize = AppText.Caption,
                             color = colors.textMuted
                         )
                         if (!lastMillerName.isNullOrBlank()) {
                             Text(
                                 text = "শেষ মিলার: $lastMillerName",
-                                fontSize = 11.sp,
+                                fontSize = AppText.Caption,
                                 color = colors.badgeBlueText
                             )
                         }
@@ -678,12 +681,12 @@ fun CyberProductCard(
                     Text(
                         text = "${BanglaNumberUtils.toBanglaDigits(product.currentBags)} বস্তা",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
+                        fontSize = AppText.Title,
                         color = colors.primary
                     )
                     Text(
                         text = "~${BanglaNumberUtils.toBanglaDigits(product.totalMon.toInt())} মণ",
-                        fontSize = 11.sp,
+                        fontSize = AppText.Caption,
                         color = colors.badgeAmberText
                     )
                 }
@@ -701,13 +704,13 @@ fun CyberProductCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "বিক্রয় দর: ${BanglaNumberUtils.formatCurrency(product.defaultSaleRate)} /বস্তা",
-                        fontSize = 12.sp,
+                        fontSize = AppText.Small,
                         fontWeight = FontWeight.SemiBold,
                         color = colors.textSecondary
                     )
                     Text(
                         text = "মণ দর: ~${BanglaNumberUtils.formatCurrency(product.ratePerMon)} /মণ",
-                        fontSize = 11.sp,
+                        fontSize = AppText.Caption,
                         color = colors.textMuted
                     )
                 }
@@ -721,10 +724,10 @@ fun CyberProductCard(
                             contentColor = colors.badgeDangerText
                         ),
                         modifier = Modifier
-                            .height(36.dp)
+                            .heightIn(min = AppSize.ButtonSm)
                             .testTag("delete_product_button")
                     ) {
-                        Text("মুছুন", fontSize = 11.sp)
+                        Text("মুছুন", fontSize = AppText.Caption)
                     }
                     Button(
                         onClick = onAdjustClick,
@@ -733,11 +736,11 @@ fun CyberProductCard(
                             containerColor = colors.surfaceElevated,
                             contentColor = colors.textPrimary
                         ),
-                        modifier = Modifier.height(36.dp)
+                        modifier = Modifier.heightIn(min = AppSize.ButtonSm)
                     ) {
-                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(AppIcon.Xs))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("স্টক ইন/আউট", fontSize = 11.sp)
+                        Text("স্টক ইন/আউট", fontSize = AppText.Caption)
                     }
                 }
             }

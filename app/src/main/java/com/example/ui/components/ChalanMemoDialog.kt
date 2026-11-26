@@ -40,6 +40,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.data.local.entity.TransactionEntity
+import com.example.ui.theme.AppIcon
+import com.example.ui.theme.AppSize
+import com.example.ui.theme.AppText
 import com.example.ui.theme.LocalAratdarColors
 import com.example.util.BanglaNumberUtils
 import java.text.SimpleDateFormat
@@ -122,17 +125,17 @@ fun ChalanMemoDialog(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
                             tint = colors.badgeSuccessText,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(AppIcon.Lg)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "চালান সংরক্ষিত হয়েছে!",
-                            fontSize = 16.sp,
+                            fontSize = AppText.Title,
                             fontWeight = FontWeight.Bold,
                             color = colors.badgeSuccessText
                         )
                     }
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(AppSize.ButtonSm)) {
                         Icon(Icons.Default.Close, contentDescription = "বন্ধ", tint = colors.textMuted)
                     }
                 }
@@ -150,7 +153,7 @@ fun ChalanMemoDialog(
                     Column {
                         Text(
                             text = "মেসার্স চালের আরত",
-                            fontSize = 18.sp,
+                            fontSize = AppText.TitleLg,
                             fontWeight = FontWeight.Bold,
                             color = colors.primary,
                             modifier = Modifier.fillMaxWidth(),
@@ -158,14 +161,14 @@ fun ChalanMemoDialog(
                         )
                         Text(
                             text = "পাইকারি চালের আড়ত ও কমিশন এজেন্ট",
-                            fontSize = 12.sp,
+                            fontSize = AppText.Small,
                             color = colors.textMuted,
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center
                         )
                         Text(
                             text = "চালান #${BanglaNumberUtils.toBanglaDigits(transaction.id)}  •  $dateStr",
-                            fontSize = 11.sp,
+                            fontSize = AppText.Caption,
                             color = colors.textSecondary,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -226,7 +229,7 @@ fun ChalanMemoDialog(
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.primary)
                     ) {
-                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(AppIcon.Sm))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text("মেমো শেয়ার", fontWeight = FontWeight.SemiBold)
                     }
@@ -264,10 +267,10 @@ fun MemoRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, fontSize = 13.sp, color = colors.textSecondary)
+        Text(text = label, fontSize = AppText.Body, color = colors.textSecondary)
         Text(
             text = value,
-            fontSize = 13.sp,
+            fontSize = AppText.Body,
             fontWeight = if (isBold) FontWeight.Bold else FontWeight.Medium,
             color = resolvedColor
         )

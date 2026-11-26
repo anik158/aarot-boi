@@ -50,6 +50,9 @@ import com.example.ui.screens.DashboardScreen
 import com.example.ui.screens.KhataScreen
 import com.example.ui.screens.PartiesScreen
 import com.example.ui.screens.TransactionEntryScreen
+import com.example.ui.theme.AppIcon
+import com.example.ui.theme.AppSize
+import com.example.ui.theme.AppText
 import com.example.ui.theme.LocalNanoColors
 import com.example.ui.theme.MyApplicationTheme
 import com.example.viewmodel.AratdarViewModel
@@ -93,8 +96,8 @@ fun MainAppContainer(viewModel: AratdarViewModel) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         // Responsive font scaling based on screen width
         val isCompactScreen = maxWidth < 380.dp
-        val navLabelSize = if (isCompactScreen) 11.sp else 12.sp
-        val navIconSize = if (isCompactScreen) 22.dp else 24.dp
+        val navLabelSize = if (isCompactScreen) AppText.Caption else AppText.Small
+        val navIconSize = if (isCompactScreen) 28.dp else AppIcon.Lg
 
         Scaffold(
             containerColor = colors.bg,
@@ -113,7 +116,7 @@ fun MainAppContainer(viewModel: AratdarViewModel) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 64.dp)
+                            .heightIn(min = AppSize.NavMin)
                             .padding(horizontal = 8.dp, vertical = 6.dp),
                         horizontalArrangement = Arrangement.SpaceAround,
                         verticalAlignment = Alignment.CenterVertically

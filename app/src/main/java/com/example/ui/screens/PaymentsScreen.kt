@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,6 +59,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.data.local.entity.PaymentEntity
+import com.example.ui.theme.AppIcon
+import com.example.ui.theme.AppSize
+import com.example.ui.theme.AppText
 import com.example.ui.theme.LocalNanoColors
 import com.example.util.BanglaNumberUtils
 import com.example.viewmodel.AratdarViewModel
@@ -107,12 +111,12 @@ fun PaymentsScreen(
                         Text(
                             text = "জমা-খরচ ও ক্যাশ রোকার",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
+                            fontSize = AppText.TitleLg,
                             color = colors.headerText
                         )
                         Text(
                             text = "দৈনিক নগদ ও অনলাইন ট্রানজেকশন খাতা",
-                            fontSize = 11.sp,
+                            fontSize = AppText.Caption,
                             color = colors.headerSubtext
                         )
                     }
@@ -127,9 +131,9 @@ fun PaymentsScreen(
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.testTag("open_denomination_button")
                     ) {
-                        Icon(Icons.Default.Money, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Money, contentDescription = null, modifier = Modifier.size(AppIcon.Sm))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("ক্যাশ মিলান", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("ক্যাশ মিলান", fontSize = AppText.Small, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -159,14 +163,14 @@ fun PaymentsScreen(
                     Column {
                         Text(
                             text = "ক্যাশ ড্রয়ারে মোট নগদ স্থিতি",
-                            fontSize = 12.sp,
+                            fontSize = AppText.Small,
                             color = colors.textSecondary,
                             fontWeight = FontWeight.Medium
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = BanglaNumberUtils.formatCurrency(metrics.cashInHand),
-                            fontSize = 24.sp,
+                            fontSize = AppText.Display,
                             fontWeight = FontWeight.Bold,
                             color = colors.primary
                         )
@@ -174,7 +178,7 @@ fun PaymentsScreen(
 
                     Box(
                         modifier = Modifier
-                            .size(46.dp)
+                            .size(AppIcon.BadgeLg)
                             .clip(RoundedCornerShape(12.dp))
                             .background(colors.badgeAmberBg)
                             .border(1.dp, colors.badgeAmberText.copy(alpha = 0.4f), RoundedCornerShape(12.dp)),
@@ -184,7 +188,7 @@ fun PaymentsScreen(
                             imageVector = Icons.Default.AccountBalanceWallet,
                             contentDescription = null,
                             tint = colors.badgeAmberText,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(AppIcon.Lg)
                         )
                     }
                 }
@@ -206,7 +210,7 @@ fun PaymentsScreen(
                     FilterChip(
                         selected = isSelected,
                         onClick = { selectedFilter = filterKey },
-                        label = { Text(label, fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
+                        label = { Text(label, fontSize = AppText.Caption, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = colors.navPillActive,
                             selectedLabelColor = colors.primary,
@@ -280,10 +284,10 @@ fun PaymentsScreen(
                         Text(
                             text = "সান্ধ্যকালীন ক্যাশ মিলানো (রোকার)",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
+                            fontSize = AppText.Title,
                             color = colors.textPrimary
                         )
-                        IconButton(onClick = { showDenominationDialog = false }, modifier = Modifier.size(28.dp)) {
+                        IconButton(onClick = { showDenominationDialog = false }, modifier = Modifier.size(AppSize.ButtonSm)) {
                             Icon(Icons.Default.Close, contentDescription = "বন্ধ", tint = colors.textMuted)
                         }
                     }
@@ -335,19 +339,19 @@ fun PaymentsScreen(
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("হাতে গণনা করা ক্যাশ:", fontSize = 12.sp, color = colors.textSecondary)
-                                Text(BanglaNumberUtils.formatCurrency(physicalTotal), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = colors.primary)
+                                Text("হাতে গণনা করা ক্যাশ:", fontSize = AppText.Small, color = colors.textSecondary)
+                                Text(BanglaNumberUtils.formatCurrency(physicalTotal), fontSize = AppText.Body, fontWeight = FontWeight.Bold, color = colors.primary)
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("সিস্টেম খাতার ক্যাশ:", fontSize = 12.sp, color = colors.textMuted)
-                                Text(BanglaNumberUtils.formatCurrency(metrics.cashInHand), fontSize = 12.sp, color = colors.textMuted)
+                                Text("সিস্টেম খাতার ক্যাশ:", fontSize = AppText.Small, color = colors.textMuted)
+                                Text(BanglaNumberUtils.formatCurrency(metrics.cashInHand), fontSize = AppText.Small, color = colors.textMuted)
                             }
                             HorizontalDivider(color = colors.borderSubtle, modifier = Modifier.padding(vertical = 4.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("পার্থক্য / গরমিল:", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = colors.textPrimary)
+                                Text("পার্থক্য / গরমিল:", fontSize = AppText.Body, fontWeight = FontWeight.Bold, color = colors.textPrimary)
                                 Text(
                                     text = if (diff == 0.0) "সম্পূর্ণ মিলেছে (০ ৳)" else "${if (diff > 0) "+" else ""}${BanglaNumberUtils.formatCurrency(diff)}",
-                                    fontSize = 13.sp,
+                                    fontSize = AppText.Body,
                                     fontWeight = FontWeight.Bold,
                                     color = if (diff == 0.0) colors.badgeSuccessText else colors.badgeOrangeText
                                 )
@@ -364,7 +368,7 @@ fun PaymentsScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp),
+                            .heightIn(min = AppSize.Button),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary)
                     ) {
@@ -387,7 +391,7 @@ fun DenomInputRow(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text("৳$label নোট", fontSize = 11.sp, color = colors.textMuted) },
+        label = { Text("৳$label নোট", fontSize = AppText.Caption, color = colors.textMuted) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         modifier = modifier,
         singleLine = true,
@@ -424,7 +428,7 @@ fun CyberPaymentItemCard(payment: PaymentEntity) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .size(38.dp)
+                        .size(AppIcon.Badge)
                         .clip(RoundedCornerShape(10.dp))
                         .background(if (isReceived) colors.badgeSuccessBg else colors.badgeOrangeBg)
                         .border(1.dp, if (isReceived) colors.badgeSuccessText.copy(alpha = 0.3f) else colors.badgeOrangeText.copy(alpha = 0.3f), RoundedCornerShape(10.dp)),
@@ -434,7 +438,7 @@ fun CyberPaymentItemCard(payment: PaymentEntity) {
                         imageVector = Icons.Default.Payments,
                         contentDescription = null,
                         tint = if (isReceived) colors.badgeSuccessText else colors.badgeOrangeText,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(AppIcon.Sm)
                     )
                 }
                 Spacer(modifier = Modifier.width(10.dp))
@@ -442,12 +446,12 @@ fun CyberPaymentItemCard(payment: PaymentEntity) {
                     Text(
                         text = payment.partyName,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
+                        fontSize = AppText.BodyLg,
                         color = colors.textPrimary
                     )
                     Text(
                         text = "${payment.paymentMethod} • $dateFormatted${if (payment.trxId.isNotEmpty()) " (TrxID: ${payment.trxId})" else ""}",
-                        fontSize = 11.sp,
+                        fontSize = AppText.Caption,
                         color = colors.textMuted
                     )
                 }
@@ -457,12 +461,12 @@ fun CyberPaymentItemCard(payment: PaymentEntity) {
                 Text(
                     text = "${if (isReceived) "+" else "-"} ${BanglaNumberUtils.formatCurrency(payment.amount)}",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
+                    fontSize = AppText.Label,
                     color = if (isReceived) colors.badgeSuccessText else colors.badgeOrangeText
                 )
                 Text(
                     text = if (isReceived) "জমা হয়েছে" else "প্রদান করা হয়েছে",
-                    fontSize = 10.sp,
+                    fontSize = AppText.Tiny,
                     color = colors.textMuted
                 )
             }

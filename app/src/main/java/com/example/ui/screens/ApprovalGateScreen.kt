@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -33,6 +34,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.theme.AppSize
+import com.example.ui.theme.AppText
 import com.example.ui.theme.LocalNanoColors
 import com.example.util.AppCredits
 import com.example.viewmodel.AratdarViewModel
@@ -69,14 +72,14 @@ fun ApprovalGateScreen(viewModel: AratdarViewModel) {
     ) {
         Text(
             text = "আরতবই",
-            fontSize = 28.sp,
+            fontSize = AppText.Hero,
             fontWeight = FontWeight.Bold,
             color = colors.textPrimary
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = if (editing) "এই ফোনটি ব্যবহারের অনুমতি চাইতে আড়তের তথ্য দিন।" else "অনুমোদনের অপেক্ষায়",
-            fontSize = 14.sp,
+            fontSize = AppText.BodyLg,
             color = colors.textSecondary,
             textAlign = TextAlign.Center
         )
@@ -97,7 +100,7 @@ fun ApprovalGateScreen(viewModel: AratdarViewModel) {
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
+                    .heightIn(min = AppSize.Button),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary)
             ) {
@@ -106,7 +109,7 @@ fun ApprovalGateScreen(viewModel: AratdarViewModel) {
         } else {
             Text(
                 text = binding.shopName,
-                fontSize = 18.sp,
+                fontSize = AppText.TitleLg,
                 fontWeight = FontWeight.Bold,
                 color = colors.textPrimary,
                 textAlign = TextAlign.Center
@@ -114,21 +117,21 @@ fun ApprovalGateScreen(viewModel: AratdarViewModel) {
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "ডিভাইস আইডি: ${binding.deviceId}",
-                fontSize = 12.sp,
+                fontSize = AppText.Small,
                 color = colors.textMuted,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = "অনুমোদন হলে এই পাতা নিজে থেকে খুলবে।",
-                fontSize = 13.sp,
+                fontSize = AppText.Body,
                 color = colors.textSecondary,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = { viewModel.requestAccess(binding.shopName, binding.proprietorName, binding.phone) },
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = AppSize.Button),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary)
             ) {
@@ -137,7 +140,7 @@ fun ApprovalGateScreen(viewModel: AratdarViewModel) {
             Spacer(modifier = Modifier.height(8.dp))
             Button(
                 onClick = { editing = true },
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = AppSize.Button),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = colors.surfaceElevated, contentColor = colors.textPrimary)
             ) {
@@ -147,7 +150,7 @@ fun ApprovalGateScreen(viewModel: AratdarViewModel) {
 
         if (message.isNotBlank()) {
             Spacer(modifier = Modifier.height(12.dp))
-            Text(text = message, color = colors.badgeDangerText, fontSize = 13.sp, textAlign = TextAlign.Center)
+            Text(text = message, color = colors.badgeDangerText, fontSize = AppText.Body, textAlign = TextAlign.Center)
         }
 
         if (binding.licenseStatus == "revoked") {
@@ -155,7 +158,7 @@ fun ApprovalGateScreen(viewModel: AratdarViewModel) {
             Text(
                 text = "এই ফোনের অনুমতি বাতিল করা হয়েছে।",
                 color = colors.badgeDangerText,
-                fontSize = 13.sp,
+                fontSize = AppText.Body,
                 textAlign = TextAlign.Center
             )
         }
@@ -163,7 +166,7 @@ fun ApprovalGateScreen(viewModel: AratdarViewModel) {
         Spacer(modifier = Modifier.height(28.dp))
         Text(
             text = AppCredits.LINE,
-            fontSize = 12.sp,
+            fontSize = AppText.Small,
             color = colors.textMuted,
             textAlign = TextAlign.Center
         )

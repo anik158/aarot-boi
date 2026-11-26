@@ -3,6 +3,7 @@ package com.example.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -73,6 +74,9 @@ import com.example.data.local.entity.ProductEntity
 import com.example.data.local.entity.TransactionEntity
 import com.example.ui.components.ChalanMemoDialog
 import com.example.ui.components.OptionalMillerField
+import com.example.ui.theme.AppIcon
+import com.example.ui.theme.AppSize
+import com.example.ui.theme.AppText
 import com.example.ui.theme.LocalNanoColors
 import com.example.util.BanglaNumberUtils
 import com.example.util.LedgerMath
@@ -214,12 +218,12 @@ fun TransactionEntryScreen(
                         Text(
                             text = if (isSaleMode) "নতুন বিক্রয় চালান তৈরি" else "নতুন ক্রয় চালান তৈরি",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 17.sp,
+                            fontSize = AppText.TitleLg,
                             color = modeAccentText
                         )
                         Text(
                             text = if (isConsignment) "কমিশন আড়তদারি (চালানী মাল বিক্রয়)" else if (isSaleMode) "নিজস্ব মজুদ থেকে বিক্রয় চালান" else "মিলার থেকে ক্রয় চালান",
-                            fontSize = 12.sp,
+                            fontSize = AppText.Small,
                             fontWeight = FontWeight.SemiBold,
                             color = modeAccentText.copy(alpha = 0.85f)
                         )
@@ -251,7 +255,7 @@ fun TransactionEntryScreen(
                     onClick = { isSaleMode = true },
                     modifier = Modifier
                         .weight(1f)
-                        .height(42.dp)
+                        .heightIn(min = AppSize.ButtonSm)
                         .testTag("mode_sale_button"),
                     shape = RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -260,7 +264,7 @@ fun TransactionEntryScreen(
                     ),
                     elevation = ButtonDefaults.buttonElevation(0.dp)
                 ) {
-                    Text("বিক্রি চালান (Sale)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text("বিক্রি চালান (Sale)", fontWeight = FontWeight.Bold, fontSize = AppText.Body)
                 }
 
                 Button(
@@ -270,7 +274,7 @@ fun TransactionEntryScreen(
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .height(42.dp)
+                        .heightIn(min = AppSize.ButtonSm)
                         .testTag("mode_purchase_button"),
                     shape = RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -279,7 +283,7 @@ fun TransactionEntryScreen(
                     ),
                     elevation = ButtonDefaults.buttonElevation(0.dp)
                 ) {
-                    Text("ক্রয় চালান (Purchase)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text("ক্রয় চালান (Purchase)", fontWeight = FontWeight.Bold, fontSize = AppText.Body)
                 }
             }
 
@@ -288,7 +292,7 @@ fun TransactionEntryScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
                         text = "চালানের প্রকৃতি — কোনটা বেছে নিচ্ছেন?",
-                        fontSize = 14.sp,
+                        fontSize = AppText.BodyLg,
                         fontWeight = FontWeight.Bold,
                         color = colors.textPrimary
                     )
@@ -334,7 +338,7 @@ fun TransactionEntryScreen(
                             imageVector = Icons.Default.Info,
                             contentDescription = null,
                             tint = modeAccentText,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(AppIcon.Sm)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
@@ -343,7 +347,7 @@ fun TransactionEntryScreen(
                             } else {
                                 "আপনার নিজের কেনা চাল বিক্রি করবেন। লাভ-লোকসান আপনার।"
                             },
-                            fontSize = 13.sp,
+                            fontSize = AppText.Body,
                             fontWeight = FontWeight.Medium,
                             color = modeAccentText
                         )
@@ -362,7 +366,7 @@ fun TransactionEntryScreen(
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
                         text = "১. চালের জাত ও স্টক নির্বাচন",
-                        fontSize = 13.sp,
+                        fontSize = AppText.Body,
                         fontWeight = FontWeight.Bold,
                         color = colors.textPrimary
                     )
@@ -403,7 +407,7 @@ fun TransactionEntryScreen(
                                             Text(prod.name, fontWeight = FontWeight.Bold, color = colors.textPrimary)
                                             Text(
                                                 "মজুদ: ${BanglaNumberUtils.toBanglaDigits(prod.currentBags)} বস্তা (~${BanglaNumberUtils.toBanglaDigits(prod.totalMon.toInt())} মণ) • দর: ${BanglaNumberUtils.formatCurrency(if (isSaleMode) prod.defaultSaleRate else prod.defaultPurchaseRate)}",
-                                                fontSize = 11.sp,
+                                                fontSize = AppText.Caption,
                                                 color = colors.textMuted
                                             )
                                         }
@@ -418,7 +422,7 @@ fun TransactionEntryScreen(
                             DropdownMenuItem(
                                 text = {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Default.Add, contentDescription = null, tint = colors.primary, modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Default.Add, contentDescription = null, tint = colors.primary, modifier = Modifier.size(AppIcon.Sm))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text("+ নতুন চাল যোগ করুন", fontWeight = FontWeight.Bold, color = colors.primary)
                                     }
@@ -494,18 +498,18 @@ fun TransactionEntryScreen(
                         ) {
                             Text(
                                 text = "বস্তা সাইজ: ${selectedProduct?.bagSizeKg ?: 50} কেজি",
-                                fontSize = 11.sp,
+                                fontSize = AppText.Caption,
                                 color = colors.textSecondary
                             )
                             Text(
                                 text = "ওজন: ${BanglaNumberUtils.toBanglaDigits(totalMon.toInt())} মণ (${BanglaNumberUtils.toBanglaDigits(totalKg)} কেজি)",
-                                fontSize = 11.sp,
+                                fontSize = AppText.Caption,
                                 fontWeight = FontWeight.Bold,
                                 color = colors.primary
                             )
                             Text(
                                 text = "মণ দর: ~${BanglaNumberUtils.formatCurrency(ratePerMon)}",
-                                fontSize = 11.sp,
+                                fontSize = AppText.Caption,
                                 color = colors.badgeAmberText
                             )
                         }
@@ -524,7 +528,7 @@ fun TransactionEntryScreen(
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
                         text = if (isSaleMode) "২. ক্রেতা / খরিদ্দার নির্বাচন" else "২. মিলার / সরবরাহকারী নির্বাচন",
-                        fontSize = 13.sp,
+                        fontSize = AppText.Body,
                         fontWeight = FontWeight.Bold,
                         color = colors.textPrimary
                     )
@@ -568,11 +572,11 @@ fun TransactionEntryScreen(
                                             ) {
                                                 Column {
                                                     Text(party.name, fontWeight = FontWeight.Bold, color = colors.textPrimary)
-                                                    Text("ঠিকানা: ${party.address} • ফোন: ${party.phone}", fontSize = 11.sp, color = colors.textMuted)
+                                                    Text("ঠিকানা: ${party.address} • ফোন: ${party.phone}", fontSize = AppText.Caption, color = colors.textMuted)
                                                 }
                                                 Text(
                                                     text = if (party.balance > 0) "বাকি: ${BanglaNumberUtils.formatCurrency(party.balance)}" else "পরিশোধিত",
-                                                    fontSize = 11.sp,
+                                                    fontSize = AppText.Caption,
                                                     fontWeight = FontWeight.Bold,
                                                     color = if (party.balance > 0) colors.badgeDangerText else colors.badgeSuccessText
                                                 )
@@ -587,7 +591,7 @@ fun TransactionEntryScreen(
                                 DropdownMenuItem(
                                     text = {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(Icons.Default.Add, contentDescription = null, tint = colors.primary, modifier = Modifier.size(18.dp))
+                                            Icon(Icons.Default.Add, contentDescription = null, tint = colors.primary, modifier = Modifier.size(AppIcon.Sm))
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text("+ নতুন পার্টি", fontWeight = FontWeight.Bold, color = colors.primary)
                                         }
@@ -614,11 +618,11 @@ fun TransactionEntryScreen(
                                     .padding(horizontal = 10.dp, vertical = 6.dp)
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.Warning, contentDescription = null, tint = colors.badgeOrangeText, modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Default.Warning, contentDescription = null, tint = colors.badgeOrangeText, modifier = Modifier.size(AppIcon.Sm))
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
                                         text = "সতর্কতা: কাস্টমারের ক্রেডিট লিমিট অতিক্রম করবে! (লিমিট: ${BanglaNumberUtils.formatCurrency(customerCreditLimit)})",
-                                        fontSize = 11.sp,
+                                        fontSize = AppText.Caption,
                                         fontWeight = FontWeight.SemiBold,
                                         color = colors.badgeOrangeText
                                     )
@@ -632,7 +636,7 @@ fun TransactionEntryScreen(
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
                             text = if (isConsignment) "যে মিলারের চালানী মাল (সাপ্লায়ার):" else "মিলার নির্বাচন:",
-                            fontSize = 12.sp,
+                            fontSize = AppText.Small,
                             fontWeight = FontWeight.Medium,
                             color = colors.textSecondary
                         )
@@ -675,11 +679,11 @@ fun TransactionEntryScreen(
                                             ) {
                                                 Column {
                                                     Text(party.name, fontWeight = FontWeight.Bold, color = colors.textPrimary)
-                                                    Text(party.address, fontSize = 11.sp, color = colors.textMuted)
+                                                    Text(party.address, fontSize = AppText.Caption, color = colors.textMuted)
                                                 }
                                                 Text(
                                                     text = "মিলার পাবে: ${BanglaNumberUtils.formatCurrency(kotlin.math.abs(party.balance))}",
-                                                    fontSize = 11.sp,
+                                                    fontSize = AppText.Caption,
                                                     fontWeight = FontWeight.Bold,
                                                     color = colors.badgeOrangeText
                                                 )
@@ -694,7 +698,7 @@ fun TransactionEntryScreen(
                                 DropdownMenuItem(
                                     text = {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(Icons.Default.Add, contentDescription = null, tint = colors.primary, modifier = Modifier.size(18.dp))
+                                            Icon(Icons.Default.Add, contentDescription = null, tint = colors.primary, modifier = Modifier.size(AppIcon.Sm))
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text("+ নতুন মিলার", fontWeight = FontWeight.Bold, color = colors.primary)
                                         }
@@ -723,11 +727,11 @@ fun TransactionEntryScreen(
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Calculate, contentDescription = null, tint = colors.badgeBlueText, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Calculate, contentDescription = null, tint = colors.badgeBlueText, modifier = Modifier.size(AppIcon.Sm))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "৩. কমিশন ও খালাসি কর্তন হিসাব",
-                                fontSize = 13.sp,
+                                fontSize = AppText.Body,
                                 fontWeight = FontWeight.Bold,
                                 color = colors.textPrimary
                             )
@@ -812,21 +816,21 @@ fun TransactionEntryScreen(
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("মোট বিক্রয় মূল্য:", fontSize = 12.sp, color = colors.textSecondary)
-                                    Text(BanglaNumberUtils.formatCurrency(totalAmount), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = colors.textPrimary)
+                                    Text("মোট বিক্রয় মূল্য:", fontSize = AppText.Small, color = colors.textSecondary)
+                                    Text(BanglaNumberUtils.formatCurrency(totalAmount), fontSize = AppText.Small, fontWeight = FontWeight.Bold, color = colors.textPrimary)
                                 }
                                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("(-) আড়ত কমিশন (${BanglaNumberUtils.toBanglaDigits(bagCount)} × ৳${commissionPerBagStr}):", fontSize = 12.sp, color = colors.badgeSuccessText)
-                                    Text("- ${BanglaNumberUtils.formatCurrency(totalCommission)}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = colors.badgeSuccessText)
+                                    Text("(-) আড়ত কমিশন (${BanglaNumberUtils.toBanglaDigits(bagCount)} × ৳${commissionPerBagStr}):", fontSize = AppText.Small, color = colors.badgeSuccessText)
+                                    Text("- ${BanglaNumberUtils.formatCurrency(totalCommission)}", fontSize = AppText.Small, fontWeight = FontWeight.Bold, color = colors.badgeSuccessText)
                                 }
                                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("(-) কুলি ও খালাসি খরচ:", fontSize = 12.sp, color = colors.badgeOrangeText)
-                                    Text("- ${BanglaNumberUtils.formatCurrency(laborCost)}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = colors.badgeOrangeText)
+                                    Text("(-) কুলি ও খালাসি খরচ:", fontSize = AppText.Small, color = colors.badgeOrangeText)
+                                    Text("- ${BanglaNumberUtils.formatCurrency(laborCost)}", fontSize = AppText.Small, fontWeight = FontWeight.Bold, color = colors.badgeOrangeText)
                                 }
                                 HorizontalDivider(color = colors.borderSubtle, modifier = Modifier.padding(vertical = 4.dp))
                                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("(=) মিলারকে প্রদেয় নিট টাকা:", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = colors.textPrimary)
-                                    Text(BanglaNumberUtils.formatCurrency(netPayableToMiller), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = colors.primary)
+                                    Text("(=) মিলারকে প্রদেয় নিট টাকা:", fontSize = AppText.Body, fontWeight = FontWeight.Bold, color = colors.textPrimary)
+                                    Text(BanglaNumberUtils.formatCurrency(netPayableToMiller), fontSize = AppText.BodyLg, fontWeight = FontWeight.Bold, color = colors.primary)
                                 }
                             }
                         }
@@ -845,7 +849,7 @@ fun TransactionEntryScreen(
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
                         text = "৪. পেমেন্ট ও নগদ জমা",
-                        fontSize = 13.sp,
+                        fontSize = AppText.Body,
                         fontWeight = FontWeight.Bold,
                         color = colors.textPrimary
                     )
@@ -907,7 +911,7 @@ fun TransactionEntryScreen(
                             FilterChip(
                                 selected = selected,
                                 onClick = { paymentMethod = method },
-                                label = { Text(label, fontSize = 11.sp, fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal) },
+                                label = { Text(label, fontSize = AppText.Caption, fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal) },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = colors.primaryContainer,
                                     selectedLabelColor = colors.primary,
@@ -957,12 +961,12 @@ fun TransactionEntryScreen(
                     ) {
                         Text(
                             text = if (dueAmount > 0) "অবশিষ্ট বকেয়া (দেনাদার খাতা):" else "সম্পূর্ণ পরিশোধিত (ক্যাশ জমা):",
-                            fontSize = 12.sp,
+                            fontSize = AppText.Small,
                             color = colors.textSecondary
                         )
                         Text(
                             text = BanglaNumberUtils.formatCurrency(if (dueAmount > 0) dueAmount else totalAmount),
-                            fontSize = 13.sp,
+                            fontSize = AppText.Body,
                             fontWeight = FontWeight.Bold,
                             color = if (dueAmount > 0) colors.badgeDangerText else colors.badgeSuccessText
                         )
@@ -1028,7 +1032,7 @@ fun TransactionEntryScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
+                    .heightIn(min = AppSize.Button)
                     .testTag("submit_transaction_button"),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -1036,11 +1040,11 @@ fun TransactionEntryScreen(
                     contentColor = colors.onPrimary
                 )
             ) {
-                Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(AppIcon.Md))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "চালান সংরক্ষণ ও ৪ খাতা আপডেট করুন",
-                    fontSize = 15.sp,
+                    fontSize = AppText.Label,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -1080,8 +1084,8 @@ fun TransactionEntryScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("নতুন চালের জাত যোগ করুন", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = colors.textPrimary)
-                        IconButton(onClick = { showAddProductDialog = false }, modifier = Modifier.size(28.dp)) {
+                        Text("নতুন চালের জাত যোগ করুন", fontWeight = FontWeight.Bold, fontSize = AppText.Title, color = colors.textPrimary)
+                        IconButton(onClick = { showAddProductDialog = false }, modifier = Modifier.size(AppSize.ButtonSm)) {
                             Icon(Icons.Default.Close, contentDescription = "বন্ধ", tint = colors.textMuted)
                         }
                     }
@@ -1118,7 +1122,7 @@ fun TransactionEntryScreen(
                         FilterChip(
                             selected = newProdBagSize == "50",
                             onClick = { newProdBagSize = "50" },
-                            label = { Text("৫০ কেজি", fontSize = 12.sp) },
+                            label = { Text("৫০ কেজি", fontSize = AppText.Small) },
                             modifier = Modifier.weight(1f),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = colors.primaryContainer,
@@ -1128,7 +1132,7 @@ fun TransactionEntryScreen(
                         FilterChip(
                             selected = newProdBagSize == "25",
                             onClick = { newProdBagSize = "25" },
-                            label = { Text("২৫ কেজি", fontSize = 12.sp) },
+                            label = { Text("২৫ কেজি", fontSize = AppText.Small) },
                             modifier = Modifier.weight(1f),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = colors.primaryContainer,
@@ -1227,7 +1231,7 @@ fun TransactionEntryScreen(
                                 newProdMiller = null
                             }
                         },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = AppSize.Button),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary)
                     ) {
@@ -1261,10 +1265,10 @@ fun TransactionEntryScreen(
                         Text(
                             text = if (addPartyAsMiller) "নতুন মিলার যোগ করুন" else "নতুন খরিদ্দার যোগ করুন",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
+                            fontSize = AppText.Title,
                             color = colors.textPrimary
                         )
-                        IconButton(onClick = { showAddPartyDialog = false }, modifier = Modifier.size(28.dp)) {
+                        IconButton(onClick = { showAddPartyDialog = false }, modifier = Modifier.size(AppSize.ButtonSm)) {
                             Icon(Icons.Default.Close, contentDescription = "বন্ধ", tint = colors.textMuted)
                         }
                     }
@@ -1352,7 +1356,7 @@ fun TransactionEntryScreen(
                         )
                         Text(
                             text = "এত টাকার বেশি বাকি হলে সতর্কবার্তা দেখাবে।",
-                            fontSize = 11.sp,
+                            fontSize = AppText.Caption,
                             color = colors.textMuted,
                             modifier = Modifier.padding(top = 4.dp)
                         )
@@ -1373,7 +1377,7 @@ fun TransactionEntryScreen(
                         )
                         Text(
                             text = "ক্রেতাকে খালি চটের বস্তা দিলে এখানে লিখুন।",
-                            fontSize = 11.sp,
+                            fontSize = AppText.Caption,
                             color = colors.textMuted,
                             modifier = Modifier.padding(top = 4.dp)
                         )
@@ -1416,7 +1420,7 @@ fun TransactionEntryScreen(
                                 newPartyEmptyBags = "0"
                             }
                         },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = AppSize.Button),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary)
                     ) {
@@ -1455,13 +1459,13 @@ private fun TradeTypeChoiceCard(
         Text(
             text = title,
             fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
+            fontSize = AppText.BodyLg,
             color = if (selected) selectedText else colors.textPrimary
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = subtitle,
-            fontSize = 11.sp,
+            fontSize = AppText.Caption,
             color = if (selected) selectedText.copy(alpha = 0.9f) else colors.textMuted
         )
     }
